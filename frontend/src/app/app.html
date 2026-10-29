@@ -1,0 +1,24 @@
+
+<h1>Inventory Management System</h1>
+
+<section>
+  <app-product-list
+    #productList
+    (editRequested)="editProduct($event)"
+  ></app-product-list>
+</section>
+
+<hr>
+
+<section>
+  <app-product-form
+    (productCreated)="productList.loadProducts()"
+    (productUpdated)="productList.loadProducts()"
+  ></app-product-form>
+</section>
+
+<hr>
+
+<section>
+  <app-warehouse-list></app-warehouse-list>
+</section>

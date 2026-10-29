@@ -1,0 +1,56 @@
+
+@if (loading) {
+  <p>Ürünler yükleniyor...</p>
+} @else if (errorMessage) {
+  <p class="error">{{ errorMessage }}</p>
+} @else {
+  <h2>Ürünler</h2>
+
+  <input
+    type="text"
+    placeholder="Ürün adı veya SKU ara..."
+    [(ngModel)]="searchText"
+  />
+
+  <table>
+    <thead>
+      <tr>
+        <th>SKU</th>
+        <th>Ürün adı</th>
+        <th>Açıklama</th>
+        <th>Birim fiyat</th>
+        <th>İşlemler</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      @for (product of filteredProducts; track product.id) {
+        <tr>
+          <td>{{ product.sku }}</td>
+          <td>{{ product.name }}</td>
+          <td>{{ product.description }}</td>
+          <td>{{ product.unitPrice }}</td>
+          <td>
+            <button
+              type="button"
+              (click)="editRequested.emit(product)"
+            >
+              Düzenle
+            </button>
+
+            <button
+              type="button"
+              (click)="deleteProduct(product.id)"
+            >
+              Sil
+            </button>
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="5">Aramayla eşleşen ürün bulunamadı.</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}

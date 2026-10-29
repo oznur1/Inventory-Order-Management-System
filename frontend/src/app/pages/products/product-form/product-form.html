@@ -1,0 +1,58 @@
+
+<h2>{{ isEditMode ? 'Ürünü Düzenle' : 'Yeni Ürün Ekle' }}</h2>
+
+<form [formGroup]="productForm" (ngSubmit)="onSubmit()">
+  <div>
+    <label for="sku">SKU</label>
+    <input id="sku" type="text" formControlName="sku">
+
+    @if (productForm.controls.sku.touched && productForm.controls.sku.invalid) {
+      <p class="error">SKU zorunludur ve en fazla 50 karakter olabilir.</p>
+    }
+  </div>
+
+  <div>
+    <label for="name">Ürün adı</label>
+    <input id="name" type="text" formControlName="name">
+
+    @if (productForm.controls.name.touched && productForm.controls.name.invalid) {
+      <p class="error">Ürün adı zorunludur ve en fazla 200 karakter olabilir.</p>
+    }
+  </div>
+
+  <div>
+    <label for="description">Açıklama</label>
+    <textarea id="description" formControlName="description"></textarea>
+  </div>
+
+  <div>
+    <label for="unitPrice">Birim fiyat</label>
+    <input id="unitPrice" type="number" formControlName="unitPrice">
+
+    @if (productForm.controls.unitPrice.touched && productForm.controls.unitPrice.invalid) {
+      <p class="error">Fiyat 0 ile 999999999 arasında olmalıdır.</p>
+    }
+  </div>
+
+  <button type="submit" [disabled]="loading">
+    @if (loading) {
+      Kaydediliyor...
+    } @else {
+      {{ isEditMode ? 'Değişiklikleri Kaydet' : 'Ürün Ekle' }}
+    }
+  </button>
+
+  @if (isEditMode) {
+    <button type="button" (click)="cancelEdit()" [disabled]="loading">
+      İptal
+    </button>
+  }
+</form>
+
+@if (successMessage) {
+  <p>{{ successMessage }}</p>
+}
+
+@if (errorMessage) {
+  <p class="error">{{ errorMessage }}</p>
+}
