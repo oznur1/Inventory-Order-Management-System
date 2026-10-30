@@ -28,6 +28,8 @@ public class InventoryService
                 WarehouseId = i.WarehouseId,
                 WarehouseName = i.Warehouse.Name,
                 QuantityOnHand = i.QuantityOnHand,
+                ReservedQuantity = i.ReservedQuantity,
+                AvailableQuantity = i.QuantityOnHand - i.ReservedQuantity,
                 ReorderLevel = i.ReorderLevel,
                 UpdatedAt = i.UpdatedAt
             })
@@ -48,6 +50,8 @@ public class InventoryService
                 WarehouseId = i.WarehouseId,
                 WarehouseName = i.Warehouse.Name,
                 QuantityOnHand = i.QuantityOnHand,
+                ReservedQuantity = i.ReservedQuantity,
+                AvailableQuantity = i.QuantityOnHand - i.ReservedQuantity,
                 ReorderLevel = i.ReorderLevel,
                 UpdatedAt = i.UpdatedAt
             })

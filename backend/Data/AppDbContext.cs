@@ -57,6 +57,7 @@ public class AppDbContext : DbContext
                 .IsRequired();
         });
 
+        
         // InventoryBalance
         modelBuilder.Entity<InventoryBalance>(entity =>
         {
@@ -65,6 +66,23 @@ public class AppDbContext : DbContext
                 i.ProductId,
                 i.WarehouseId
             }).IsUnique();
+
+            entity.Property(i => i.ReservedQuantity)
+                .HasDefaultValue(0);
+
+            entity.Property(i => i.RowVersion)
+                .IsRowVersion();
+
+            entity.ToTable(t =>
+            {
+                t.HasCheckConstraint(
+                    "CK_InventoryBalances_QuantityOnHand",
+                    "[QuantityOnHand] >= 0");
+
+                t.HasCheckConstraint(
+                    "CK_InventoryBalances_ReservedQuantity",
+                    "[ReservedQuantity] >= 0 AND [ReservedQuantity] <= [QuantityOnHand]");
+            });
 
             entity.HasOne(i => i.Product)
                 .WithMany(p => p.InventoryBalances)
@@ -133,6 +151,7 @@ public class AppDbContext : DbContext
                 .HasPrecision(18, 2);
         });
 
+        
         // OrderItem
         modelBuilder.Entity<OrderItem>(entity =>
         {
@@ -159,7 +178,13 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(i => i.ProductId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(i => i.Warehouse)
+                .WithMany()
+                .HasForeignKey(i => i.WarehouseId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
+
 
         // StockReservation
         modelBuilder.Entity<StockReservation>(entity =>

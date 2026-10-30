@@ -13,9 +13,13 @@ public class OrderItem
     public int ProductId { get; set; }
     public Product Product { get; set; } = null!;
 
-    // Sipariş edilen ürün miktarı
+    // Stok hangi depodan karşılanacak?
+    public int WarehouseId { get; set; }
+    public Warehouse Warehouse { get; set; } = null!;
+
+    // Sipariş edilen miktar
     public int Quantity { get; set; }
 
-    // Sipariş verildiği andaki ürün fiyatı
+    // Sipariş anındaki ürün fiyatı
     public decimal UnitPrice { get; set; }
 }

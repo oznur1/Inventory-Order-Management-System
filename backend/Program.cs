@@ -23,6 +23,10 @@ builder.Services.AddScoped<WarehouseService>();
 
 builder.Services.AddScoped<InventoryService>();
 
+builder.Services.AddScoped<OrderService>();
+
+builder.Services.AddScoped<StockMovementService>();
+
 builder.Services.AddOpenApi();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
