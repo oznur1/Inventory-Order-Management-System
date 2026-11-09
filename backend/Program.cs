@@ -1,7 +1,7 @@
 
 using backend.Data;
-using Microsoft.EntityFrameworkCore;
 using backend.Services;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,16 +18,13 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers();
 
 builder.Services.AddScoped<ProductService>();
-
 builder.Services.AddScoped<WarehouseService>();
-
 builder.Services.AddScoped<InventoryService>();
-
 builder.Services.AddScoped<OrderService>();
-
 builder.Services.AddScoped<StockMovementService>();
 
 builder.Services.AddOpenApi();
+builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(
@@ -38,6 +35,9 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();

@@ -1,3 +1,4 @@
+
 using backend.Data;
 using backend.DTOs;
 using backend.Entities;
@@ -14,90 +15,86 @@ public class OrderService
         _context = context;
     }
 
-    // Yeni sipariş oluşturur ve sipariş için stok rezervasyonu yapar.
+    // POST: Create a new order and reserve stock.
     public async Task<OrderResponseDto> CreateAsync(CreateOrderDto dto)
     {
+        if (dto is null)
+            throw new InvalidOperationException("Order request is required.");
+
+        if (string.IsNullOrWhiteSpace(dto.CustomerName))
+            throw new InvalidOperationException("Customer name is required.");
+
+        if (dto.Items is null || dto.Items.Count == 0)
+            throw new InvalidOperationException(
+                "An order must contain at least one item.");
+
+        if (dto.Items.Any(i =>
+            i is null ||
+            i.ProductId <= 0 ||
+            i.WarehouseId <= 0 ||
+            i.Quantity <= 0))
+        {
+            throw new InvalidOperationException(
+                "Order items must have valid product, warehouse and quantity values.");
+        }
+
+        var duplicateItem = dto.Items
+            .GroupBy(i => new { i.ProductId, i.WarehouseId })
+            .Any(g => g.Count() > 1);
+
+        if (duplicateItem)
+            throw new InvalidOperationException(
+                "The same product cannot appear twice for the same warehouse.");
+
+        var productIds = dto.Items
+            .Select(i => i.ProductId)
+            .Distinct()
+            .ToList();
+
+        var products = await _context.Products
+            .Where(p => productIds.Contains(p.Id))
+            .ToDictionaryAsync(p => p.Id);
+
+        if (products.Count != productIds.Count)
+            throw new InvalidOperationException(
+                "One or more products could not be found.");
+
+        foreach (var product in products.Values)
+        {
+            if (!product.IsActive)
+                throw new InvalidOperationException(
+                    $"Product '{product.Name}' is inactive.");
+
+            if (product.UnitPrice < 0)
+                throw new InvalidOperationException(
+                    $"Product '{product.Name}' has an invalid price.");
+        }
+
+        var warehouseIds = dto.Items
+            .Select(i => i.WarehouseId)
+            .Distinct()
+            .ToList();
+
+        var warehouses = await _context.Warehouses
+            .Where(w => warehouseIds.Contains(w.Id))
+            .ToDictionaryAsync(w => w.Id);
+
+        if (warehouses.Count != warehouseIds.Count)
+            throw new InvalidOperationException(
+                "One or more warehouses could not be found.");
+
+        foreach (var warehouse in warehouses.Values)
+        {
+            if (!warehouse.IsActive)
+                throw new InvalidOperationException(
+                    $"Warehouse '{warehouse.Name}' is inactive.");
+        }
+
         await using var transaction =
             await _context.Database.BeginTransactionAsync();
 
         try
         {
-            // 1. Sipariş kalemlerini kontrol et.
-            if (dto.Items == null || dto.Items.Count == 0)
-            {
-                throw new InvalidOperationException(
-                    "Sipariş en az bir ürün içermelidir.");
-            }
-
-            // Aynı ürünün aynı depodan iki kez eklenmesini engelle.
-            var duplicateItem = dto.Items
-                .GroupBy(i => new { i.ProductId, i.WarehouseId })
-                .Any(g => g.Count() > 1);
-
-            if (duplicateItem)
-            {
-                throw new InvalidOperationException(
-                    "Aynı ürün aynı depodan bir siparişte yalnızca bir kez eklenebilir.");
-            }
-
-            // 2. İstek içerisindeki ürünleri veritabanından getir.
-            var productIds = dto.Items
-                .Select(i => i.ProductId)
-                .Distinct()
-                .ToList();
-
-            var products = await _context.Products
-                .Where(p => productIds.Contains(p.Id))
-                .ToDictionaryAsync(p => p.Id);
-
-            if (products.Count != productIds.Count)
-            {
-                throw new InvalidOperationException(
-                    "Siparişte bulunmayan bir ürün mevcut.");
-            }
-
-            // Pasif ürünlerin sipariş edilmesini engelle.
-            foreach (var product in products.Values)
-            {
-                if (!product.IsActive)
-                {
-                    throw new InvalidOperationException(
-                        $"'{product.Name}' ürünü aktif olmadığı için sipariş edilemez.");
-                }
-
-                if (product.UnitPrice < 0)
-                {
-                    throw new InvalidOperationException(
-                        $"'{product.Name}' ürününün fiyatı geçersiz.");
-                }
-            }
-
-            // 3. Kullanılacak depoları getir.
-            var warehouseIds = dto.Items
-                .Select(i => i.WarehouseId)
-                .Distinct()
-                .ToList();
-
-            var warehouses = await _context.Warehouses
-                .Where(w => warehouseIds.Contains(w.Id))
-                .ToDictionaryAsync(w => w.Id);
-
-            if (warehouses.Count != warehouseIds.Count)
-            {
-                throw new InvalidOperationException(
-                    "Siparişte bulunmayan bir depo mevcut.");
-            }
-
-            foreach (var warehouse in warehouses.Values)
-            {
-                if (!warehouse.IsActive)
-                {
-                    throw new InvalidOperationException(
-                        $"'{warehouse.Name}' deposu aktif değil.");
-                }
-            }
-
-            // 4. İlgili ürün-depo stok kayıtlarını getir.
             var inventoryBalances = await _context.InventoryBalances
                 .Where(i =>
                     productIds.Contains(i.ProductId) &&
@@ -105,10 +102,8 @@ public class OrderService
                 .ToListAsync();
 
             var inventoryDictionary = inventoryBalances
-                .ToDictionary(
-                    i => (i.ProductId, i.WarehouseId));
+                .ToDictionary(i => (i.ProductId, i.WarehouseId));
 
-            // 5. Sipariş nesnesini oluştur.
             var order = new Order
             {
                 CustomerName = dto.CustomerName.Trim(),
@@ -120,7 +115,6 @@ public class OrderService
 
             decimal totalAmount = 0;
 
-            // 6. Her sipariş kalemi için stok kontrolü ve rezervasyon.
             foreach (var item in dto.Items)
             {
                 var product = products[item.ProductId];
@@ -134,10 +128,9 @@ public class OrderService
                     inventoryKey, out var inventory))
                 {
                     throw new InvalidOperationException(
-                        $"'{product.Name}' ürünü seçilen depoda bulunamadı.");
+                        $"Product '{product.Name}' is not available in the selected warehouse.");
                 }
 
-                // Rezerve edilebilir stok miktarı.
                 var availableQuantity =
                     inventory.QuantityOnHand -
                     inventory.ReservedQuantity;
@@ -145,60 +138,44 @@ public class OrderService
                 if (availableQuantity < item.Quantity)
                 {
                     throw new InvalidOperationException(
-                        $"'{product.Name}' ürünü için yetersiz stok. " +
-                        $"Mevcut kullanılabilir stok: {availableQuantity}, " +
-                        $"istenen miktar: {item.Quantity}.");
+                        $"Insufficient stock for '{product.Name}'. " +
+                        $"Available: {availableQuantity}, Requested: {item.Quantity}.");
                 }
 
-                // Ürün fiyatını istemciden değil veritabanından al.
                 var unitPrice = product.UnitPrice;
+                var lineTotal = checked(unitPrice * item.Quantity);
+                totalAmount = checked(totalAmount + lineTotal);
 
-                var lineTotal = unitPrice * item.Quantity;
-
-                totalAmount += lineTotal;
-
-                // Sipariş kalemini oluştur.
-                var orderItem = new OrderItem
+                order.Items.Add(new OrderItem
                 {
                     ProductId = product.Id,
                     WarehouseId = item.WarehouseId,
                     Quantity = item.Quantity,
                     UnitPrice = unitPrice
-                };
+                });
 
-                order.Items.Add(orderItem);
+                inventory.ReservedQuantity = checked(
+                    inventory.ReservedQuantity + item.Quantity);
 
-                // Fiziksel stoktan düşmeden rezervasyon miktarını artır.
-                inventory.ReservedQuantity += item.Quantity;
                 inventory.UpdatedAt = DateTime.UtcNow;
 
-                // Rezervasyon kaydını oluştur.
-                var reservation = new StockReservation
+                order.StockReservations.Add(new StockReservation
                 {
                     ProductId = product.Id,
                     WarehouseId = item.WarehouseId,
                     Quantity = item.Quantity,
                     Status = "Active",
-                    CreatedAt = DateTime.UtcNow,
-                    Order = order
-                };
-
-                _context.StockReservations.Add(reservation);
+                    CreatedAt = DateTime.UtcNow
+                });
             }
 
-            // 7. Sipariş toplamını hesapla.
             order.TotalAmount = totalAmount;
 
-            // 8. Sipariş, kalemler ve rezervasyonları kaydet.
-            // RowVersion sayesinde eşzamanlı stok güncellemeleri kontrol edilir.
             _context.Orders.Add(order);
 
             await _context.SaveChangesAsync();
-
-            // 9. Bütün işlemler başarılıysa transaction tamamlanır.
             await transaction.CommitAsync();
 
-            // 10. API yanıtını hazırla.
             return new OrderResponseDto
             {
                 Id = order.Id,
@@ -209,15 +186,16 @@ public class OrderService
                 TotalAmount = order.TotalAmount,
                 CreatedAt = order.CreatedAt,
 
-                Items = order.Items.Select(i => new OrderItemResponseDto
-                {
-                    Id = i.Id,
-                    ProductId = i.ProductId,
-                    ProductName = products[i.ProductId].Name,
-                    Quantity = i.Quantity,
-                    UnitPrice = i.UnitPrice,
-                    LineTotal = i.UnitPrice * i.Quantity
-                }).ToList()
+                Items = order.Items.Select(i =>
+                    new OrderItemResponseDto
+                    {
+                        Id = i.Id,
+                        ProductId = i.ProductId,
+                        ProductName = products[i.ProductId].Name,
+                        Quantity = i.Quantity,
+                        UnitPrice = i.UnitPrice,
+                        LineTotal = i.UnitPrice * i.Quantity
+                    }).ToList()
             };
         }
         catch (DbUpdateConcurrencyException)
@@ -225,13 +203,242 @@ public class OrderService
             await transaction.RollbackAsync();
 
             throw new InvalidOperationException(
-                "Stok bilgisi başka bir işlem tarafından güncellendi. " +
-                "Lütfen stok durumunu kontrol edip tekrar deneyin.");
+                "Inventory was updated by another transaction. " +
+                "Please refresh stock information and try again.");
         }
         catch
         {
             await transaction.RollbackAsync();
             throw;
         }
+    }
+
+    // GET: Get all orders.
+    public async Task<List<OrderResponseDto>> GetAllAsync()
+    {
+        var orders = await _context.Orders
+            .AsNoTracking()
+            .Include(o => o.Items)
+            .OrderByDescending(o => o.CreatedAt)
+            .ToListAsync();
+
+        var productIds = orders
+            .SelectMany(o => o.Items)
+            .Select(i => i.ProductId)
+            .Distinct()
+            .ToList();
+
+        var products = await _context.Products
+            .AsNoTracking()
+            .Where(p => productIds.Contains(p.Id))
+            .ToDictionaryAsync(p => p.Id);
+
+        return orders
+            .Select(order => MapToResponse(order, products))
+            .ToList();
+    }
+
+    // GET: Get order by ID.
+    public async Task<OrderResponseDto?> GetByIdAsync(int id)
+    {
+        var order = await _context.Orders
+            .AsNoTracking()
+            .Include(o => o.Items)
+            .FirstOrDefaultAsync(o => o.Id == id);
+
+        if (order is null)
+            return null;
+
+        var productIds = order.Items
+            .Select(i => i.ProductId)
+            .Distinct()
+            .ToList();
+
+        var products = await _context.Products
+            .AsNoTracking()
+            .Where(p => productIds.Contains(p.Id))
+            .ToDictionaryAsync(p => p.Id);
+
+        return MapToResponse(order, products);
+    }
+
+    // POST: Ship an order and consume reserved stock.
+    public async Task<OrderResponseDto?> ShipAsync(int id)
+    {
+        await using var transaction =
+            await _context.Database.BeginTransactionAsync();
+
+        try
+        {
+            // 1. Load order, items and reservations.
+            var order = await _context.Orders
+                .Include(o => o.Items)
+                .Include(o => o.StockReservations)
+                .FirstOrDefaultAsync(o => o.Id == id);
+
+            if (order is null)
+                return null;
+
+            // 2. Only pending orders can be shipped.
+            if (order.Status != "Pending")
+            {
+                throw new InvalidOperationException(
+                    $"Order cannot be shipped. Current status: {order.Status}.");
+            }
+
+            // 3. Get active reservations.
+            var activeReservations = order.StockReservations
+                .Where(r => r.Status == "Active")
+                .ToList();
+
+            if (activeReservations.Count == 0)
+            {
+                throw new InvalidOperationException(
+                    "No active stock reservations found for this order.");
+            }
+
+            // 4. Verify reservations match order items.
+            var orderQuantities = order.Items
+                .GroupBy(i => (i.ProductId, i.WarehouseId))
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Sum(i => i.Quantity));
+
+            var reservationQuantities = activeReservations
+                .GroupBy(r => (r.ProductId, r.WarehouseId))
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Sum(r => r.Quantity));
+
+            if (orderQuantities.Count != reservationQuantities.Count ||
+                orderQuantities.Any(item =>
+                    !reservationQuantities.TryGetValue(
+                        item.Key, out var quantity) ||
+                    quantity != item.Value))
+            {
+                throw new InvalidOperationException(
+                    "Stock reservations do not match the order items.");
+            }
+
+            // 5. Load inventory balances.
+            var productIds = activeReservations
+                .Select(r => r.ProductId)
+                .Distinct()
+                .ToList();
+
+            var warehouseIds = activeReservations
+                .Select(r => r.WarehouseId)
+                .Distinct()
+                .ToList();
+
+            var inventoryBalances = await _context.InventoryBalances
+                .Where(i =>
+                    productIds.Contains(i.ProductId) &&
+                    warehouseIds.Contains(i.WarehouseId))
+                .ToListAsync();
+
+            var inventoryDictionary = inventoryBalances
+                .ToDictionary(i => (i.ProductId, i.WarehouseId));
+
+            // 6. Consume reserved stock.
+            foreach (var reservation in activeReservations)
+            {
+                var key = (
+                    reservation.ProductId,
+                    reservation.WarehouseId
+                );
+
+                if (!inventoryDictionary.TryGetValue(
+                    key, out var inventory))
+                {
+                    throw new InvalidOperationException(
+                        "Inventory balance could not be found.");
+                }
+
+                if (inventory.ReservedQuantity < reservation.Quantity)
+                {
+                    throw new InvalidOperationException(
+                        "Reserved inventory quantity is insufficient.");
+                }
+
+                if (inventory.QuantityOnHand < reservation.Quantity)
+                {
+                    throw new InvalidOperationException(
+                        "Physical inventory quantity is insufficient.");
+                }
+
+                inventory.QuantityOnHand -= reservation.Quantity;
+                inventory.ReservedQuantity -= reservation.Quantity;
+                inventory.UpdatedAt = DateTime.UtcNow;
+
+                reservation.Status = "Fulfilled";
+
+                // 7. Create outbound stock movement.
+                _context.StockMovements.Add(new StockMovement
+                {
+                    ProductId = reservation.ProductId,
+                    WarehouseId = reservation.WarehouseId,
+                    MovementType = "Outbound",
+                    Quantity = reservation.Quantity,
+                    ReferenceNumber = $"ORDER-{order.Id}",
+                    Notes = "Stock consumed for shipped order.",
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+
+            // 8. Update order status.
+            order.Status = "Shipped";
+
+            // 9. Save and commit.
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            // 10. Return updated order.
+            return await GetByIdAsync(id);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            await transaction.RollbackAsync();
+
+            throw new InvalidOperationException(
+                "Inventory was updated by another transaction. " +
+                "Please refresh stock information and try again.");
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+    }
+
+    // Map order entity to response DTO.
+    private static OrderResponseDto MapToResponse(
+        Order order,
+        Dictionary<int, Product> products)
+    {
+        return new OrderResponseDto
+        {
+            Id = order.Id,
+            CustomerName = order.CustomerName,
+            CustomerEmail = order.CustomerEmail,
+            ShippingAddress = order.ShippingAddress,
+            Status = order.Status,
+            TotalAmount = order.TotalAmount,
+            CreatedAt = order.CreatedAt,
+
+            Items = order.Items.Select(item =>
+                new OrderItemResponseDto
+                {
+                    Id = item.Id,
+                    ProductId = item.ProductId,
+                    ProductName = products.TryGetValue(
+                        item.ProductId, out var product)
+                        ? product.Name
+                        : null,
+                    Quantity = item.Quantity,
+                    UnitPrice = item.UnitPrice,
+                    LineTotal = item.UnitPrice * item.Quantity
+                }).ToList()
+        };
     }
 }
