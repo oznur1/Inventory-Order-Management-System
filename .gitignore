@@ -6,3 +6,7 @@
 .env
 .env.*
 !.env.example
+
+# Backend runtime logs
+backend/backend-run-error.txt
+backend/backend-run-output.txt
