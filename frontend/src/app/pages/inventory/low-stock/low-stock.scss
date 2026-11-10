@@ -1,0 +1,193 @@
+
+.low-stock-list {
+  width: 100%;
+}
+
+.alert-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.alert-eyebrow {
+  color: #d97706;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.3px;
+}
+
+.alert-heading h2 {
+  margin: 6px 0;
+  color: #172033;
+  font-size: 21px;
+}
+
+.alert-heading p {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.alert-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid #fed7aa;
+  border-radius: 20px;
+  background: #fff7ed;
+  color: #c2410c;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.alert-count-icon {
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #f97316;
+  color: #fff;
+  font-weight: 700;
+}
+
+.alert-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 14px 16px;
+  border: 1px solid #fed7aa;
+  border-radius: 9px;
+  background: #fffaf3;
+}
+
+.alert-summary-icon {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: #ffedd5;
+  color: #c2410c;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.alert-summary strong,
+.alert-summary span {
+  display: block;
+}
+
+.alert-summary strong {
+  color: #9a3412;
+  font-size: 12px;
+}
+
+.alert-summary span {
+  margin-top: 3px;
+  color: #9a6b4b;
+  font-size: 11px;
+}
+
+.low-stock-table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.low-stock-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  white-space: nowrap;
+}
+
+.low-stock-table th {
+  padding: 14px 12px;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-align: left;
+}
+
+.low-stock-table td {
+  padding: 15px 12px;
+  border-bottom: 1px solid #edf0f5;
+  color: #475569;
+  font-size: 12px;
+}
+
+.low-stock-table tbody tr:hover {
+  background: #fffaf3;
+}
+
+.alert-product-name {
+  color: #172033;
+  font-weight: 600;
+}
+
+.stock-value {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.available-value {
+  color: #d97706;
+  font-weight: 600;
+}
+
+.deficit-badge {
+  display: inline-block;
+  padding: 5px 9px;
+  border-radius: 6px;
+  background: #fff1f2;
+  color: #e11d48;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.alert-message {
+  padding: 28px;
+  color: #94a3b8;
+  text-align: center;
+}
+
+.empty-alert {
+  padding: 32px !important;
+  text-align: center !important;
+}
+
+.empty-alert span,
+.empty-alert strong {
+  display: block;
+}
+
+.empty-alert-icon {
+  margin-bottom: 8px;
+  color: #16a34a;
+  font-size: 25px;
+}
+
+.empty-alert strong {
+  color: #15803d;
+  font-size: 13px;
+}
+
+.empty-alert span:last-child {
+  margin-top: 4px;
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+@media (max-width: 650px) {
+  .alert-heading {
+    align-items: flex-start;
+  }
+}

@@ -1,58 +1,110 @@
 
-<h2>{{ isEditMode ? 'Ürünü Düzenle' : 'Yeni Ürün Ekle' }}</h2>
+<div class="product-form">
 
-<form [formGroup]="productForm" (ngSubmit)="onSubmit()">
-  <div>
-    <label for="sku">SKU</label>
-    <input id="sku" type="text" formControlName="sku">
+  <div class="form-heading">
+    <div>
+      <span class="form-eyebrow">PRODUCT MANAGEMENT</span>
+      <h2>{{ isEditMode ? 'Ürünü Düzenle' : 'Yeni Ürün Ekle' }}</h2>
+      <p>Ürün bilgilerini aşağıdaki alanlardan yönetebilirsiniz.</p>
+    </div>
 
-    @if (productForm.controls.sku.touched && productForm.controls.sku.invalid) {
-      <p class="error">SKU zorunludur ve en fazla 50 karakter olabilir.</p>
-    }
+    <div class="form-heading-icon">＋</div>
   </div>
 
-  <div>
-    <label for="name">Ürün adı</label>
-    <input id="name" type="text" formControlName="name">
+  <form [formGroup]="productForm" (ngSubmit)="onSubmit()">
 
-    @if (productForm.controls.name.touched && productForm.controls.name.invalid) {
-      <p class="error">Ürün adı zorunludur ve en fazla 200 karakter olabilir.</p>
-    }
-  </div>
+    <div class="form-grid">
 
-  <div>
-    <label for="description">Açıklama</label>
-    <textarea id="description" formControlName="description"></textarea>
-  </div>
+      <div class="form-field">
+        <label for="sku">SKU <span>*</span></label>
+        <input
+          id="sku"
+          type="text"
+          formControlName="sku"
+          placeholder="Örn. LAP-001"
+        />
 
-  <div>
-    <label for="unitPrice">Birim fiyat</label>
-    <input id="unitPrice" type="number" formControlName="unitPrice">
+        @if (productForm.controls.sku.touched && productForm.controls.sku.invalid) {
+          <p class="field-error">SKU zorunludur ve en fazla 50 karakter olabilir.</p>
+        }
+      </div>
 
-    @if (productForm.controls.unitPrice.touched && productForm.controls.unitPrice.invalid) {
-      <p class="error">Fiyat 0 ile 999999999 arasında olmalıdır.</p>
-    }
-  </div>
+      <div class="form-field">
+        <label for="name">Ürün Adı <span>*</span></label>
+        <input
+          id="name"
+          type="text"
+          formControlName="name"
+          placeholder="Ürün adını girin"
+        />
 
-  <button type="submit" [disabled]="loading">
-    @if (loading) {
-      Kaydediliyor...
-    } @else {
-      {{ isEditMode ? 'Değişiklikleri Kaydet' : 'Ürün Ekle' }}
-    }
-  </button>
+        @if (productForm.controls.name.touched && productForm.controls.name.invalid) {
+          <p class="field-error">Ürün adı zorunludur ve en fazla 200 karakter olabilir.</p>
+        }
+      </div>
 
-  @if (isEditMode) {
-    <button type="button" (click)="cancelEdit()" [disabled]="loading">
-      İptal
-    </button>
+      <div class="form-field form-field-full">
+        <label for="description">Açıklama</label>
+        <textarea
+          id="description"
+          formControlName="description"
+          rows="4"
+          placeholder="Ürün hakkında kısa bir açıklama girin..."
+        ></textarea>
+      </div>
+
+      <div class="form-field">
+        <label for="unitPrice">Birim Fiyat <span>*</span></label>
+        <div class="price-input">
+          <input
+            id="unitPrice"
+            type="number"
+            formControlName="unitPrice"
+            min="0"
+            placeholder="0.00"
+          />
+        </div>
+
+        @if (productForm.controls.unitPrice.touched && productForm.controls.unitPrice.invalid) {
+          <p class="field-error">Fiyat 0 ile 999999999 arasında olmalıdır.</p>
+        }
+      </div>
+
+    </div>
+
+    <div class="form-actions">
+      @if (isEditMode) {
+        <button
+          type="button"
+          class="btn-cancel"
+          (click)="cancelEdit()"
+          [disabled]="loading"
+        >
+          İptal
+        </button>
+      }
+
+      <button
+        type="submit"
+        class="btn-save"
+        [disabled]="loading"
+      >
+        @if (loading) {
+          Kaydediliyor...
+        } @else {
+          {{ isEditMode ? 'Değişiklikleri Kaydet' : '＋ Ürün Ekle' }}
+        }
+      </button>
+    </div>
+
+  </form>
+
+  @if (successMessage) {
+    <div class="form-success">{{ successMessage }}</div>
   }
-</form>
 
-@if (successMessage) {
-  <p>{{ successMessage }}</p>
-}
+  @if (errorMessage) {
+    <div class="form-error">{{ errorMessage }}</div>
+  }
 
-@if (errorMessage) {
-  <p class="error">{{ errorMessage }}</p>
-}
+</div>

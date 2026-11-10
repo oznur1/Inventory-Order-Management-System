@@ -1,37 +1,72 @@
 
-<h2>Depolar</h2>
+<div class="warehouse-list">
 
-@if (loading) {
-  <p>Depolar yükleniyor...</p>
-} @else if (errorMessage) {
-  <p>{{ errorMessage }}</p>
-} @else {
-  <!-- Mevcut depo tablon burada kalabilir. -->
-}
-@if (!loading && !errorMessage) {
-  @if (warehouses.length === 0) {
-    <p>Henüz depo bulunmuyor.</p>
+  <div class="section-heading">
+    <div>
+      <span class="section-eyebrow">WAREHOUSE MANAGEMENT</span>
+      <h2>Depolar</h2>
+      <p class="section-description">
+        Kayıtlı depoları ve operasyonel durumlarını görüntüleyin.
+      </p>
+    </div>
+
+    <div class="warehouse-count">
+      {{ warehouses.length }} depo
+    </div>
+  </div>
+
+  @if (loading) {
+    <div class="warehouse-message">Depolar yükleniyor...</div>
+  } @else if (errorMessage) {
+    <p class="error">{{ errorMessage }}</p>
   } @else {
-    <table>
-      <thead>
-        <tr>
-          <th>Kod</th>
-          <th>Depo adı</th>
-          <th>Adres</th>
-          <th>Durum</th>
-        </tr>
-      </thead>
 
-      <tbody>
-        @for (warehouse of warehouses; track warehouse.id) {
-          <tr>
-            <td>{{ warehouse.code }}</td>
-            <td>{{ warehouse.name }}</td>
-            <td>{{ warehouse.address || '-' }}</td>
-            <td>{{ warehouse.isActive ? 'Aktif' : 'Pasif' }}</td>
-          </tr>
-        }
-      </tbody>
-    </table>
+    @if (warehouses.length === 0) {
+      <div class="warehouse-empty">
+        Henüz kayıtlı depo bulunmuyor.
+      </div>
+    } @else {
+      <div class="warehouse-table-container">
+        <table class="warehouse-table">
+          <thead>
+            <tr>
+              <th>DEPO KODU</th>
+              <th>DEPO ADI</th>
+              <th>ADRES</th>
+              <th>DURUM</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @for (warehouse of warehouses; track warehouse.id) {
+              <tr>
+                <td>
+                  <span class="warehouse-code">{{ warehouse.code }}</span>
+                </td>
+                <td>
+                  <span class="warehouse-name">{{ warehouse.name }}</span>
+                </td>
+                <td class="warehouse-address">
+                  {{ warehouse.address || 'Adres belirtilmemiş' }}
+                </td>
+                <td>
+                  @if (warehouse.isActive) {
+                    <span class="status-active">
+                      <span class="status-indicator"></span>
+                      Aktif
+                    </span>
+                  } @else {
+                    <span class="status-inactive">
+                      <span class="status-indicator"></span>
+                      Pasif
+                    </span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
   }
-}
+</div>

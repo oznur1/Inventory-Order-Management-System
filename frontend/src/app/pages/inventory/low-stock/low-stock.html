@@ -1,0 +1,97 @@
+
+<div class="low-stock-list">
+
+  <div class="alert-heading">
+    <div>
+      <span class="alert-eyebrow">INVENTORY MONITORING</span>
+      <h2>Low Stock Alerts</h2>
+      <p>Yeniden sipariş seviyesi altındaki ürünleri takip edin.</p>
+    </div>
+
+    <div class="alert-count">
+      <span class="alert-count-icon">!</span>
+      {{ alerts.length }} uyarı
+    </div>
+  </div>
+
+  @if (loading) {
+    <div class="alert-message">
+      Stok bilgileri yükleniyor...
+    </div>
+  } @else if (errorMessage) {
+    <p class="error">{{ errorMessage }}</p>
+  } @else {
+
+    @if (alerts.length > 0) {
+      <div class="alert-summary">
+        <div class="alert-summary-icon">!</div>
+        <div>
+          <strong>{{ alerts.length }} düşük stok kaydı</strong>
+          <span>Bu ürünlerin stok seviyelerini kontrol etmeniz önerilir.</span>
+        </div>
+      </div>
+    }
+
+    <div class="low-stock-table-container">
+      <table class="low-stock-table">
+        <thead>
+          <tr>
+            <th>ÜRÜN</th>
+            <th>DEPO</th>
+            <th>MEVCUT STOK</th>
+            <th>AYRILMIŞ</th>
+            <th>KULLANILABİLİR</th>
+            <th>SİPARİŞ SEVİYESİ</th>
+            <th>STOK AÇIĞI</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (alert of alerts; track alert.inventoryId) {
+            <tr>
+              <td>
+                <span class="alert-product-name">
+                  {{ alert.productName }}
+                </span>
+              </td>
+
+              <td>{{ alert.warehouseName }}</td>
+
+              <td>
+                <span class="stock-value">
+                  {{ alert.quantityOnHand }}
+                </span>
+              </td>
+
+              <td>{{ alert.reservedQuantity }}</td>
+
+              <td>
+                <span class="available-value">
+                  {{ alert.availableQuantity }}
+                </span>
+              </td>
+
+              <td>{{ alert.reorderLevel }}</td>
+
+              <td>
+                <span class="deficit-badge">
+                  -{{ alert.stockDeficit }}
+                </span>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="7" class="empty-alert">
+                <span class="empty-alert-icon">✓</span>
+                <strong>Tüm stok seviyeleri normal.</strong>
+                <span>Şu anda düşük stok uyarısı bulunmuyor.</span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+</div>
+

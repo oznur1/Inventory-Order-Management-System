@@ -1,24 +1,208 @@
 
-<h1>Inventory Management System</h1>
+<div class="app-layout">
 
-<section>
-  <app-product-list
-    #productList
-    (editRequested)="editProduct($event)"
-  ></app-product-list>
-</section>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
 
-<hr>
+    <div class="brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+          <path d="M32 4 57 18 57 46 32 60 7 46 7 18Z"/>
+          <path d="M7 18 32 32 57 18 M32 32V60"/>
+        </svg>
+      </div>
 
-<section>
-  <app-product-form
-    (productCreated)="productList.loadProducts()"
-    (productUpdated)="productList.loadProducts()"
-  ></app-product-form>
-</section>
+      <div class="brand-text">
+        <h2>VENÜS ERP</h2>
+        <span>Inventory Management</span>
+      </div>
+    </div>
 
-<hr>
+    <div class="sidebar-label">WORKSPACE</div>
 
-<section>
-  <app-warehouse-list></app-warehouse-list>
-</section>
+    <nav class="navigation">
+      <a href="#dashboard" class="nav-item active">
+        <span class="nav-icon">▦</span>
+        Dashboard
+      </a>
+
+      <a href="#products" class="nav-item">
+        <span class="nav-icon">◇</span>
+        Products
+      </a>
+
+      <a href="#warehouses" class="nav-item">
+        <span class="nav-icon">▤</span>
+        Warehouses
+      </a>
+
+      <a href="#inventory" class="nav-item">
+        <span class="nav-icon">▣</span>
+        Inventory Alerts
+      </a>
+    </nav>
+
+    <div class="sidebar-label reports-label">ANALYTICS</div>
+
+    <nav class="navigation">
+      <a href="#inventory" class="nav-item">
+        <span class="nav-icon">▥</span>
+        Inventory Reports
+      </a>
+
+      <a href="#inventory" class="nav-item">
+        <span class="nav-icon">↗</span>
+        Stock Movements
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="status-dot"></div>
+
+      <div>
+        <strong>System Online</strong>
+        <span>All services operational</span>
+      </div>
+    </div>
+
+  </aside>
+
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+
+      <div class="breadcrumb">
+        <span class="breadcrumb-home">Workspace</span>
+        <span class="breadcrumb-divider">/</span>
+        <span class="breadcrumb-current">Dashboard</span>
+      </div>
+
+      <div class="topbar-right">
+
+        <div class="system-status">
+          <span class="status-indicator"></span>
+          <span>All Systems Operational</span>
+        </div>
+
+        <div class="topbar-divider"></div>
+
+        <div class="user-profile">
+          <div class="user-avatar">Ö</div>
+
+          <div class="user-info">
+            <strong>Administrator</strong>
+            <span>Inventory Manager</span>
+          </div>
+
+          <span class="profile-chevron">⌄</span>
+        </div>
+
+      </div>
+    </header>
+
+
+    <!-- PAGE CONTENT -->
+    <div class="page-content">
+
+      <!-- DASHBOARD WELCOME -->
+      <section class="welcome-section" id="dashboard">
+
+        <div class="welcome-content">
+
+          <div class="welcome-eyebrow">
+            <span class="eyebrow-line"></span>
+            INVENTORY & OPERATIONS
+          </div>
+
+          <h1>Inventory Dashboard</h1>
+
+          <p>
+            Your central workspace for managing products,
+            monitoring stock levels and tracking warehouse operations.
+          </p>
+
+          <div class="welcome-meta">
+            <span class="welcome-meta-icon">▦</span>
+            <span>Enterprise Resource Planning</span>
+            <span class="meta-separator">•</span>
+            <span>Inventory Management</span>
+          </div>
+
+        </div>
+
+        <div class="welcome-visual">
+
+          <div class="visual-decoration decoration-one"></div>
+          <div class="visual-decoration decoration-two"></div>
+
+          <div class="visual-card">
+            <div class="visual-card-icon">▦</div>
+
+            <div>
+              <span>MANAGEMENT</span>
+              <strong>VENÜS ERP</strong>
+            </div>
+          </div>
+
+          <div class="visual-caption">
+            <span class="visual-caption-dot"></span>
+            SMART INVENTORY WORKSPACE
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- PRODUCTS -->
+      <section class="content-section" id="products">
+
+        <app-product-list
+          #productList
+          (editRequested)="editProduct($event)">
+        </app-product-list>
+
+      </section>
+
+
+      <!-- PRODUCT FORM -->
+      <section class="content-section" id="product-form">
+
+        <app-product-form
+          (productCreated)="productList.loadProducts()"
+          (productUpdated)="productList.loadProducts()">
+        </app-product-form>
+
+      </section>
+
+
+      <!-- WAREHOUSES -->
+      <section class="content-section" id="warehouses">
+
+        <app-warehouse-list></app-warehouse-list>
+
+      </section>
+
+
+      <!-- INVENTORY ALERTS -->
+      <section class="content-section" id="inventory">
+
+        <app-low-stock></app-low-stock>
+
+      </section>
+
+
+      <!-- FOOTER -->
+      <footer class="page-footer">
+        VENÜS ERP
+        <span>Enterprise Inventory Management Platform</span>
+      </footer>
+
+    </div>
+
+  </main>
+
+</div>

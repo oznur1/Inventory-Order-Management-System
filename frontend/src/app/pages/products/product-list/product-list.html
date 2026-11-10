@@ -1,56 +1,146 @@
 
-@if (loading) {
-  <p>Ürünler yükleniyor...</p>
-} @else if (errorMessage) {
-  <p class="error">{{ errorMessage }}</p>
-} @else {
-  <h2>Ürünler</h2>
+<div class="product-list">
 
-  <input
-    type="text"
-    placeholder="Ürün adı veya SKU ara..."
-    [(ngModel)]="searchText"
-  />
+  <div class="section-heading">
+    <div>
+      <span class="section-eyebrow">PRODUCT MANAGEMENT</span>
+      <h2>Products</h2>
+      <p>Manage your product catalog and pricing information.</p>
+    </div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>SKU</th>
-        <th>Ürün adı</th>
-        <th>Açıklama</th>
-        <th>Birim fiyat</th>
-        <th>İşlemler</th>
-      </tr>
-    </thead>
+    <div class="product-count">
+      {{ filteredProducts.length }} products
+    </div>
+  </div>
 
-    <tbody>
-      @for (product of filteredProducts; track product.id) {
-        <tr>
-          <td>{{ product.sku }}</td>
-          <td>{{ product.name }}</td>
-          <td>{{ product.description }}</td>
-          <td>{{ product.unitPrice }}</td>
-          <td>
-            <button
-              type="button"
-              (click)="editRequested.emit(product)"
-            >
-              Düzenle
-            </button>
+  <div class="product-toolbar">
+    <div class="search-box">
 
-            <button
-              type="button"
-              (click)="deleteProduct(product.id)"
-            >
-              Sil
-            </button>
-          </td>
-        </tr>
-      } @empty {
-        <tr>
-          <td colspan="5">Aramayla eşleşen ürün bulunamadı.</td>
-        </tr>
-      }
-    </tbody>
-  </table>
-}
+      <svg
+        class="search-icon"
+        viewBox="0 0 24 24"
+        fill="none"
+        aria-hidden="true"
+      >
+        <circle
+          cx="10.8"
+          cy="10.8"
+          r="6.8"
+          stroke="currentColor"
+          stroke-width="2"
+        />
+        <path
+          d="M16 16L21 21"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+      </svg>
+
+      <input
+        type="text"
+        placeholder="Search by product name or SKU..."
+        [(ngModel)]="searchText"
+      />
+
+    </div>
+  </div>
+
+  @if (loading) {
+    <div class="table-message">
+      Loading products...
+    </div>
+  } @else if (errorMessage) {
+    <div class="table-message error">
+      {{ errorMessage }}
+    </div>
+  } @else {
+
+    <div class="product-table-container">
+
+      <table class="product-table">
+
+        <thead>
+          <tr>
+            <th>PRODUCT</th>
+            <th>SKU</th>
+            <th>DESCRIPTION</th>
+            <th>UNIT PRICE</th>
+            <th>ACTIONS</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (product of filteredProducts; track product.id) {
+
+            <tr>
+
+              <td>
+                <strong class="product-name">
+                  {{ product.name }}
+                </strong>
+              </td>
+
+              <td>
+                <span class="sku-label">
+                  {{ product.sku }}
+                </span>
+              </td>
+
+              <td>
+                <span class="product-description">
+                  {{ product.description || '—' }}
+                </span>
+              </td>
+
+              <td>
+                <strong class="product-price">
+                  {{ product.unitPrice | number:'1.2-2' }}
+                </strong>
+              </td>
+
+              <td>
+                <div class="action-buttons">
+
+                  <button
+                    type="button"
+                    class="btn-edit"
+                    title="Edit product"
+                    (click)="editRequested.emit(product)"
+                  >
+                    <span>✎</span>
+                    Edit
+                  </button>
+
+                  <button
+                    type="button"
+                    class="btn-delete"
+                    title="Delete product"
+                    (click)="deleteProduct(product.id)"
+                  >
+                    <span>×</span>
+                    Delete
+                  </button>
+
+                </div>
+              </td>
+
+            </tr>
+
+          } @empty {
+
+            <tr>
+              <td colspan="5" class="empty-products">
+                No products found.
+              </td>
+            </tr>
+
+          }
+        </tbody>
+
+      </table>
+
+    </div>
+  }
+
+</div>
