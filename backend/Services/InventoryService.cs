@@ -16,13 +16,54 @@ public class InventoryService
     }
 
     // Tüm stok kayıtlarını listele
-    public async Task<List<InventoryResponseDto>> GetAllAsync()
+   
+public async Task<List<InventoryResponseDto>> GetAllAsync(
+    int? warehouseId = null,
+    int? productId = null)
+{
+    var query = _context.InventoryBalances
+        .AsNoTracking()
+        .AsQueryable();
+
+    // Depoya göre filtreleme
+    if (warehouseId.HasValue)
+    {
+        query = query.Where(i => i.WarehouseId == warehouseId.Value);
+    }
+
+    // Ürüne göre filtreleme
+    if (productId.HasValue)
+    {
+        query = query.Where(i => i.ProductId == productId.Value);
+    }
+
+    return await query
+        .Select(i => new InventoryResponseDto
+        {
+            Id = i.Id,
+            ProductId = i.ProductId,
+            ProductName = i.Product.Name,
+            WarehouseId = i.WarehouseId,
+            WarehouseName = i.Warehouse.Name,
+            QuantityOnHand = i.QuantityOnHand,
+            ReservedQuantity = i.ReservedQuantity,
+            AvailableQuantity = i.QuantityOnHand - i.ReservedQuantity,
+            ReorderLevel = i.ReorderLevel,
+            UpdatedAt = i.UpdatedAt
+        })
+        .ToListAsync();
+}
+
+
+    // Düşük stok seviyesindeki ürünleri listele
+    public async Task<List<LowStockAlertDto>> GetLowStockAsync()
     {
         return await _context.InventoryBalances
             .AsNoTracking()
-            .Select(i => new InventoryResponseDto
+            .Where(i => i.QuantityOnHand <= i.ReorderLevel)
+            .Select(i => new LowStockAlertDto
             {
-                Id = i.Id,
+                InventoryId = i.Id,
                 ProductId = i.ProductId,
                 ProductName = i.Product.Name,
                 WarehouseId = i.WarehouseId,
@@ -31,8 +72,10 @@ public class InventoryService
                 ReservedQuantity = i.ReservedQuantity,
                 AvailableQuantity = i.QuantityOnHand - i.ReservedQuantity,
                 ReorderLevel = i.ReorderLevel,
+                StockDeficit = i.ReorderLevel - i.QuantityOnHand,
                 UpdatedAt = i.UpdatedAt
             })
+            .OrderBy(i => i.QuantityOnHand)
             .ToListAsync();
     }
 
@@ -146,4 +189,45 @@ public class InventoryService
 
         return true;
     }
+
+
+// Genel stok raporunu oluştur
+
+public async Task<InventoryReportDto> GetReportAsync()
+{
+    var report = await _context.InventoryBalances
+        .AsNoTracking()
+        .GroupBy(i => 1)
+        .Select(g => new InventoryReportDto
+        {
+            TotalInventoryRecords = g.Count(),
+
+            TotalProducts = g
+                .Select(i => i.ProductId)
+                .Distinct()
+                .Count(),
+
+            TotalWarehouses = g
+                .Select(i => i.WarehouseId)
+                .Distinct()
+                .Count(),
+
+            TotalQuantityOnHand = g.Sum(i => i.QuantityOnHand),
+
+            TotalReservedQuantity = g.Sum(i => i.ReservedQuantity),
+
+            TotalAvailableQuantity = g.Sum(
+                i => i.QuantityOnHand - i.ReservedQuantity),
+
+            LowStockCount = g.Count(
+                i => i.QuantityOnHand <= i.ReorderLevel)
+        })
+        .FirstOrDefaultAsync();
+
+    report ??= new InventoryReportDto();
+
+    report.GeneratedAt = DateTime.UtcNow;
+
+    return report;
+}
 }

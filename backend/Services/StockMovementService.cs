@@ -15,26 +15,86 @@ public class StockMovementService
     }
 
     // Stok hareketlerini listele
-    public async Task<List<StockMovementResponseDto>> GetAllAsync()
+  
+public async Task<List<StockMovementResponseDto>> GetAllAsync(
+    int? productId = null,
+    int? warehouseId = null,
+    string? movementType = null,
+    DateTime? from = null,
+    DateTime? to = null)
+{
+    var query = _context.StockMovements
+        .AsNoTracking()
+        .AsQueryable();
+
+    if (productId.HasValue)
     {
-        return await _context.StockMovements
-            .AsNoTracking()
-            .OrderByDescending(m => m.CreatedAt)
-            .Select(m => new StockMovementResponseDto
-            {
-                Id = m.Id,
-                ProductId = m.ProductId,
-                ProductName = m.Product.Name,
-                WarehouseId = m.WarehouseId,
-                WarehouseName = m.Warehouse.Name,
-                MovementType = m.MovementType,
-                Quantity = m.Quantity,
-                ReferenceNumber = m.ReferenceNumber,
-                Notes = m.Notes,
-                CreatedAt = m.CreatedAt
-            })
-            .ToListAsync();
+        query = query.Where(m => m.ProductId == productId.Value);
     }
+
+    if (warehouseId.HasValue)
+    {
+        query = query.Where(m => m.WarehouseId == warehouseId.Value);
+    }
+
+    if (!string.IsNullOrWhiteSpace(movementType))
+    {
+        query = query.Where(m => m.MovementType == movementType);
+    }
+
+    if (from.HasValue)
+    {
+        query = query.Where(m => m.CreatedAt >= from.Value.Date);
+    }
+
+    if (to.HasValue)
+    {
+        var endDateExclusive = to.Value.Date.AddDays(1);
+        query = query.Where(m => m.CreatedAt < endDateExclusive);
+    }
+
+    return await query
+        .OrderByDescending(m => m.CreatedAt)
+        .Select(m => new StockMovementResponseDto
+        {
+            Id = m.Id,
+            ProductId = m.ProductId,
+            ProductName = m.Product.Name,
+            WarehouseId = m.WarehouseId,
+            WarehouseName = m.Warehouse.Name,
+            MovementType = m.MovementType,
+            Quantity = m.Quantity,
+            ReferenceNumber = m.ReferenceNumber,
+            Notes = m.Notes,
+            CreatedAt = m.CreatedAt
+        })
+        .ToListAsync();
+}
+    
+
+public async Task<StockMovementReportDto> GetReportAsync()
+{
+    var totalInbound = await _context.StockMovements
+        .Where(m => m.MovementType == "Inbound")
+        .SumAsync(m => (int?)m.Quantity) ?? 0;
+
+    var totalOutbound = await _context.StockMovements
+        .Where(m => m.MovementType == "Outbound")
+        .SumAsync(m => (int?)m.Quantity) ?? 0;
+
+    var totalMovements = await _context.StockMovements
+        .CountAsync();
+
+    return new StockMovementReportDto
+    {
+        TotalMovements = totalMovements,
+        TotalInboundQuantity = totalInbound,
+        TotalOutboundQuantity = totalOutbound,
+        NetStockChange = totalInbound - totalOutbound,
+        GeneratedAt = DateTime.UtcNow
+    };
+}
+
 
     // Yeni stok hareketi oluştur
     public async Task<StockMovementResponseDto> CreateAsync(

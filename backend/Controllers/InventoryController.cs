@@ -17,11 +17,45 @@ public class InventoryController : ControllerBase
     }
 
     // GET: api/inventory
+    // GET: api/inventory?warehouseId=1
+    // GET: api/inventory?productId=5
     [HttpGet]
-    public async Task<ActionResult<List<InventoryResponseDto>>> GetAll()
+    public async Task<ActionResult<List<InventoryResponseDto>>> GetAll(
+        [FromQuery] int? warehouseId,
+        [FromQuery] int? productId)
     {
-        var inventory = await _inventoryService.GetAllAsync();
+        if ((warehouseId.HasValue && warehouseId.Value <= 0) ||
+            (productId.HasValue && productId.Value <= 0))
+        {
+            return BadRequest(new
+            {
+                message = "Depo ve ürün ID değerleri pozitif olmalıdır."
+            });
+        }
+
+        var inventory = await _inventoryService.GetAllAsync(
+            warehouseId,
+            productId);
+
         return Ok(inventory);
+    }
+
+    // GET: api/inventory/low-stock
+    [HttpGet("low-stock")]
+    public async Task<ActionResult<List<LowStockAlertDto>>> GetLowStock()
+    {
+        var alerts = await _inventoryService.GetLowStockAsync();
+
+        return Ok(alerts);
+    }
+
+    // GET: api/inventory/report
+    [HttpGet("report")]
+    public async Task<ActionResult<InventoryReportDto>> GetReport()
+    {
+        var report = await _inventoryService.GetReportAsync();
+
+        return Ok(report);
     }
 
     // GET: api/inventory/1
@@ -32,7 +66,10 @@ public class InventoryController : ControllerBase
 
         if (inventory is null)
         {
-            return NotFound(new { message = "Stok kaydı bulunamadı." });
+            return NotFound(new
+            {
+                message = "Stok kaydı bulunamadı."
+            });
         }
 
         return Ok(inventory);
@@ -72,7 +109,10 @@ public class InventoryController : ControllerBase
 
         if (inventory is null)
         {
-            return NotFound(new { message = "Stok kaydı bulunamadı." });
+            return NotFound(new
+            {
+                message = "Stok kaydı bulunamadı."
+            });
         }
 
         return Ok(inventory);
@@ -86,7 +126,10 @@ public class InventoryController : ControllerBase
 
         if (!deleted)
         {
-            return NotFound(new { message = "Stok kaydı bulunamadı." });
+            return NotFound(new
+            {
+                message = "Stok kaydı bulunamadı."
+            });
         }
 
         return NoContent();
