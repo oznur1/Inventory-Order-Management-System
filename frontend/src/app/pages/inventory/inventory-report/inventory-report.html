@@ -1,0 +1,147 @@
+
+<div class="inventory-report">
+
+  <!-- PAGE HEADER -->
+  <div class="report-heading">
+    <div>
+      <span class="report-eyebrow">INVENTORY ANALYTICS</span>
+      <h2>Inventory Report</h2>
+      <p>Monitor inventory levels, stock availability and warehouse distribution.</p>
+    </div>
+
+    <button
+      type="button"
+      class="refresh-button"
+      (click)="loadReport()"
+      [disabled]="loading">
+      <span class="refresh-icon">↻</span>
+      {{ loading ? 'Refreshing...' : 'Refresh Report' }}
+    </button>
+  </div>
+
+  <!-- LOADING -->
+  @if (loading && !report) {
+    <div class="report-message">
+      <span class="loading-spinner"></span>
+      <p>Loading inventory report...</p>
+    </div>
+  }
+
+  <!-- ERROR -->
+  @if (errorMessage) {
+    <div class="report-error">
+      <strong>Unable to load report</strong>
+      <span>{{ errorMessage }}</span>
+      <button type="button" (click)="loadReport()">Try Again</button>
+    </div>
+  }
+
+  <!-- REPORT CONTENT -->
+  @if (report) {
+
+    <!-- KPI CARDS -->
+    <div class="report-kpi-grid">
+
+      <div class="kpi-card">
+        <div class="kpi-card-top">
+          <span class="kpi-label">TOTAL PRODUCTS</span>
+          <span class="kpi-icon products-icon">◇</span>
+        </div>
+        <strong class="kpi-value">
+          {{ report.totalProducts | number }}
+        </strong>
+        <span class="kpi-description">Unique products in inventory</span>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-card-top">
+          <span class="kpi-label">TOTAL WAREHOUSES</span>
+          <span class="kpi-icon warehouses-icon">▤</span>
+        </div>
+        <strong class="kpi-value">
+          {{ report.totalWarehouses | number }}
+        </strong>
+        <span class="kpi-description">Warehouses with inventory</span>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-card-top">
+          <span class="kpi-label">AVAILABLE STOCK</span>
+          <span class="kpi-icon available-icon">▦</span>
+        </div>
+        <strong class="kpi-value">
+          {{ report.totalAvailableQuantity | number }}
+        </strong>
+        <span class="kpi-description">Units available for operations</span>
+      </div>
+
+      <div class="kpi-card warning-card">
+        <div class="kpi-card-top">
+          <span class="kpi-label">LOW STOCK ALERTS</span>
+          <span class="kpi-icon warning-icon">!</span>
+        </div>
+        <strong class="kpi-value">
+          {{ report.lowStockCount | number }}
+        </strong>
+        <span class="kpi-description">Inventory records below reorder level</span>
+      </div>
+
+    </div>
+
+    <!-- STOCK OVERVIEW -->
+    <section class="report-panel">
+
+      <div class="panel-heading">
+        <div>
+          <span class="panel-eyebrow">STOCK OVERVIEW</span>
+          <h3>Inventory Summary</h3>
+          <p>Current stock quantities across all inventory records.</p>
+        </div>
+
+        <span class="panel-status">
+          <span></span>
+          Live report
+        </span>
+      </div>
+
+      <div class="stock-summary-grid">
+
+        <div class="stock-summary-item">
+          <span class="summary-label">Total Inventory Records</span>
+          <strong>{{ report.totalInventoryRecords | number }}</strong>
+        </div>
+
+        <div class="stock-summary-item">
+          <span class="summary-label">Physical Stock</span>
+          <strong>{{ report.totalQuantityOnHand | number }}</strong>
+        </div>
+
+        <div class="stock-summary-item">
+          <span class="summary-label">Reserved Quantity</span>
+          <strong>{{ report.totalReservedQuantity | number }}</strong>
+        </div>
+
+        <div class="stock-summary-item">
+          <span class="summary-label">Available Quantity</span>
+          <strong class="available-total">
+            {{ report.totalAvailableQuantity | number }}
+          </strong>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- REPORT FOOTER -->
+    <div class="report-footer">
+      <span>
+        Report generated:
+        {{ report.generatedAt | date:'dd MMM yyyy, HH:mm' }}
+      </span>
+
+      <span>VENÜS ERP · Inventory Analytics</span>
+    </div>
+
+  }
+
+</div>

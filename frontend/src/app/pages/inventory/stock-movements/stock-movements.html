@@ -1,0 +1,214 @@
+
+<div class="stock-movements">
+
+  <div class="page-header">
+    <div>
+      <span class="eyebrow">INVENTORY MANAGEMENT</span>
+      <h2>Stock Movements</h2>
+      <p>Monitor and track all inventory inbound and outbound transactions.</p>
+    </div>
+
+    <button
+      type="button"
+      class="refresh-btn"
+      (click)="loadMovements()"
+      [disabled]="loading">
+      {{ loading ? 'Refreshing...' : '↻ Refresh' }}
+    </button>
+  </div>
+
+  <div class="summary-row">
+    <div class="summary-card">
+      <span>Total Movements</span>
+      <strong>{{ movements.length }}</strong>
+    </div>
+
+    <div class="summary-card inbound-card">
+      <span>Inbound Movements</span>
+      <strong>
+        {{ movements.filter(m => m.movementType === 'Inbound').length }}
+      </strong>
+    </div>
+
+    <div class="summary-card outbound-card">
+      <span>Outbound Movements</span>
+      <strong>
+        {{ movements.filter(m => m.movementType === 'Outbound').length }}
+      </strong>
+    </div>
+  </div>
+
+  <div class="filter-panel">
+    <div class="filter-heading">
+      <div>
+        <h3>Filter Movements</h3>
+        <p>Search transactions using the available filters.</p>
+      </div>
+    </div>
+
+    <div class="filter-grid">
+
+      <div class="filter-field">
+        <label for="productId">Product ID</label>
+        <input
+          id="productId"
+          type="number"
+          min="1"
+          [(ngModel)]="productId"
+          placeholder="Enter product ID">
+      </div>
+
+      <div class="filter-field">
+        <label for="warehouseId">Warehouse ID</label>
+        <input
+          id="warehouseId"
+          type="number"
+          min="1"
+          [(ngModel)]="warehouseId"
+          placeholder="Enter warehouse ID">
+      </div>
+
+      <div class="filter-field">
+        <label for="movementType">Movement Type</label>
+        <select
+          id="movementType"
+          [(ngModel)]="movementType">
+          <option value="">All Movements</option>
+          <option value="Inbound">Inbound</option>
+          <option value="Outbound">Outbound</option>
+        </select>
+      </div>
+
+      <div class="filter-field">
+        <label for="from">From Date</label>
+        <input
+          id="from"
+          type="date"
+          [(ngModel)]="from">
+      </div>
+
+      <div class="filter-field">
+        <label for="to">To Date</label>
+        <input
+          id="to"
+          type="date"
+          [(ngModel)]="to">
+      </div>
+
+    </div>
+
+    <div class="filter-actions">
+      <button
+        type="button"
+        class="apply-btn"
+        (click)="applyFilters()">
+        Apply Filters
+      </button>
+
+      <button
+        type="button"
+        class="reset-btn"
+        (click)="resetFilters()">
+        Reset
+      </button>
+    </div>
+  </div>
+
+  <div class="table-panel">
+
+    <div class="table-header">
+      <div>
+        <h3>Movement History</h3>
+        <p>Inventory transaction records</p>
+      </div>
+
+      <span class="record-count">
+        {{ movements.length }} records
+      </span>
+    </div>
+
+    @if (loading) {
+      <div class="state-message">
+        Loading stock movements...
+      </div>
+    }
+
+    @if (errorMessage) {
+      <div class="error-message">
+        {{ errorMessage }}
+
+        <button type="button" (click)="loadMovements()">
+          Try Again
+        </button>
+      </div>
+    }
+
+    @if (!loading && !errorMessage && movements.length === 0) {
+      <div class="state-message">
+        No stock movements found.
+      </div>
+    }
+
+    @if (!loading && !errorMessage && movements.length > 0) {
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Product</th>
+              <th>Warehouse</th>
+              <th>Movement Type</th>
+              <th>Quantity</th>
+              <th>Reference</th>
+              <th>Date</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @for (movement of movements; track movement.id) {
+              <tr>
+                <td>#{{ movement.id }}</td>
+
+                <td class="product-cell">
+                  {{ movement.productName }}
+                </td>
+
+                <td>
+                  {{ movement.warehouseName }}
+                </td>
+
+                <td>
+                  <span
+                    class="movement-badge"
+                    [class.inbound]="movement.movementType === 'Inbound'"
+                    [class.outbound]="movement.movementType === 'Outbound'">
+                    {{ movement.movementType }}
+                  </span>
+                </td>
+
+                <td class="quantity-cell">
+                  {{ movement.quantity }}
+                </td>
+
+                <td>
+                  {{ movement.referenceNumber || '—' }}
+                </td>
+
+                <td>
+                  {{ movement.createdAt | date:'dd MMM yyyy, HH:mm' }}
+                </td>
+
+                <td class="notes-cell">
+                  {{ movement.notes || '—' }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+  </div>
+
+</div>

@@ -45,12 +45,12 @@
     <div class="sidebar-label reports-label">ANALYTICS</div>
 
     <nav class="navigation">
-      <a href="#inventory" class="nav-item">
+      <a href="#inventory-reports" class="nav-item">
         <span class="nav-icon">▥</span>
         Inventory Reports
       </a>
 
-      <a href="#inventory" class="nav-item">
+      <a href="#stock-movements" class="nav-item">
         <span class="nav-icon">↗</span>
         Stock Movements
       </a>
@@ -58,7 +58,6 @@
 
     <div class="sidebar-footer">
       <div class="status-dot"></div>
-
       <div>
         <strong>System Online</strong>
         <span>All services operational</span>
@@ -67,13 +66,11 @@
 
   </aside>
 
-
   <!-- MAIN CONTENT -->
   <main class="main-content">
 
     <!-- TOPBAR -->
     <header class="topbar">
-
       <div class="breadcrumb">
         <span class="breadcrumb-home">Workspace</span>
         <span class="breadcrumb-divider">/</span>
@@ -81,7 +78,6 @@
       </div>
 
       <div class="topbar-right">
-
         <div class="system-status">
           <span class="status-indicator"></span>
           <span>All Systems Operational</span>
@@ -91,27 +87,21 @@
 
         <div class="user-profile">
           <div class="user-avatar">Ö</div>
-
           <div class="user-info">
             <strong>Administrator</strong>
             <span>Inventory Manager</span>
           </div>
-
           <span class="profile-chevron">⌄</span>
         </div>
-
       </div>
     </header>
-
 
     <!-- PAGE CONTENT -->
     <div class="page-content">
 
       <!-- DASHBOARD WELCOME -->
       <section class="welcome-section" id="dashboard">
-
         <div class="welcome-content">
-
           <div class="welcome-eyebrow">
             <span class="eyebrow-line"></span>
             INVENTORY & OPERATIONS
@@ -130,17 +120,14 @@
             <span class="meta-separator">•</span>
             <span>Inventory Management</span>
           </div>
-
         </div>
 
         <div class="welcome-visual">
-
           <div class="visual-decoration decoration-one"></div>
           <div class="visual-decoration decoration-two"></div>
 
           <div class="visual-card">
             <div class="visual-card-icon">▦</div>
-
             <div>
               <span>MANAGEMENT</span>
               <strong>VENÜS ERP</strong>
@@ -151,50 +138,44 @@
             <span class="visual-caption-dot"></span>
             SMART INVENTORY WORKSPACE
           </div>
-
         </div>
-
       </section>
-
 
       <!-- PRODUCTS -->
       <section class="content-section" id="products">
-
         <app-product-list
           #productList
           (editRequested)="editProduct($event)">
         </app-product-list>
-
       </section>
-
 
       <!-- PRODUCT FORM -->
       <section class="content-section" id="product-form">
-
         <app-product-form
           (productCreated)="productList.loadProducts()"
           (productUpdated)="productList.loadProducts()">
         </app-product-form>
-
       </section>
-
 
       <!-- WAREHOUSES -->
       <section class="content-section" id="warehouses">
-
         <app-warehouse-list></app-warehouse-list>
-
       </section>
-
 
       <!-- INVENTORY ALERTS -->
       <section class="content-section" id="inventory">
-
         <app-low-stock></app-low-stock>
-
       </section>
 
+      <!-- INVENTORY REPORTS -->
+      <section class="content-section" id="inventory-reports">
+        <app-inventory-report></app-inventory-report>
+      </section>
 
+      <!-- STOCK MOVEMENTS PLACEHOLDER -->
+<section class="content-section" id="stock-movements">
+  <app-stock-movements></app-stock-movements>
+</section>
       <!-- FOOTER -->
       <footer class="page-footer">
         VENÜS ERP
@@ -202,7 +183,6 @@
       </footer>
 
     </div>
-
   </main>
 
 </div>
