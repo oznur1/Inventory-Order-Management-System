@@ -1,72 +1,297 @@
 
-<div class="warehouse-list">
+<section class="warehouse-list">
 
   <div class="section-heading">
-    <div>
+    <div class="heading-content">
       <span class="section-eyebrow">WAREHOUSE MANAGEMENT</span>
-      <h2>Depolar</h2>
+      <h2>Warehouses</h2>
       <p class="section-description">
-        Kayıtlı depoları ve operasyonel durumlarını görüntüleyin.
+        View your registered warehouses and monitor their operational status.
       </p>
     </div>
 
-    <div class="warehouse-count">
-      {{ warehouses.length }} depo
+    <div class="heading-actions">
+      <div class="warehouse-count">
+        <span class="count-number">{{ warehouses.length }}</span>
+        <span class="count-label">
+          {{ warehouses.length === 1 ? 'Warehouse' : 'Warehouses' }}
+        </span>
+      </div>
+
+      <button
+        type="button"
+        class="add-warehouse-button"
+        (click)="openCreateModal()">
+        <span class="add-icon">+</span>
+        Add Warehouse
+      </button>
     </div>
   </div>
 
-  @if (loading) {
-    <div class="warehouse-message">Depolar yükleniyor...</div>
-  } @else if (errorMessage) {
-    <p class="error">{{ errorMessage }}</p>
-  } @else {
+  <div class="warehouse-content">
 
-    @if (warehouses.length === 0) {
-      <div class="warehouse-empty">
-        Henüz kayıtlı depo bulunmuyor.
+    @if (loading) {
+      <div class="warehouse-state">
+        <span class="loading-spinner"></span>
+        <span>Loading warehouses...</span>
+      </div>
+    } @else if (errorMessage) {
+      <div class="warehouse-state error-state" role="alert">
+        <span class="state-icon">!</span>
+        <div>
+          <strong>Unable to load warehouses</strong>
+          <p>{{ errorMessage }}</p>
+          <button
+            type="button"
+            class="retry-button"
+            (click)="loadWarehouses()">
+            Try Again
+          </button>
+        </div>
       </div>
     } @else {
-      <div class="warehouse-table-container">
-        <table class="warehouse-table">
-          <thead>
-            <tr>
-              <th>DEPO KODU</th>
-              <th>DEPO ADI</th>
-              <th>ADRES</th>
-              <th>DURUM</th>
-            </tr>
-          </thead>
 
-          <tbody>
-            @for (warehouse of warehouses; track warehouse.id) {
+      @if (warehouses.length === 0) {
+        <div class="warehouse-empty">
+          <div class="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M3 10L12 4L21 10V20H3V10Z"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M9 20V13H15V20"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+
+          <h3>No Warehouses Found</h3>
+          <p>
+            There are currently no warehouses registered in the system.
+          </p>
+
+          <button
+            type="button"
+            class="empty-add-button"
+            (click)="openCreateModal()">
+            Add your first warehouse
+          </button>
+        </div>
+      } @else {
+
+        <div class="table-toolbar">
+          <div class="table-title">
+            <span class="table-title-indicator"></span>
+            <span>Warehouse Directory</span>
+          </div>
+
+          <span class="record-count">
+            {{ warehouses.length }} records
+          </span>
+        </div>
+
+        <div class="warehouse-table-container">
+          <table class="warehouse-table">
+            <thead>
               <tr>
-                <td>
-                  <span class="warehouse-code">{{ warehouse.code }}</span>
-                </td>
-                <td>
-                  <span class="warehouse-name">{{ warehouse.name }}</span>
-                </td>
-                <td class="warehouse-address">
-                  {{ warehouse.address || 'Adres belirtilmemiş' }}
-                </td>
-                <td>
-                  @if (warehouse.isActive) {
-                    <span class="status-active">
-                      <span class="status-indicator"></span>
-                      Aktif
-                    </span>
-                  } @else {
-                    <span class="status-inactive">
-                      <span class="status-indicator"></span>
-                      Pasif
-                    </span>
-                  }
-                </td>
+                <th>WAREHOUSE CODE</th>
+                <th>WAREHOUSE NAME</th>
+                <th>ADDRESS</th>
+                <th>STATUS</th>
               </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+            </thead>
+
+            <tbody>
+              @for (warehouse of warehouses; track warehouse.id) {
+                <tr>
+                  <td>
+                    <span class="warehouse-code">
+                      {{ warehouse.code }}
+                    </span>
+                  </td>
+
+                  <td>
+                    <div class="warehouse-name-cell">
+                      <div class="warehouse-avatar">
+                        {{ warehouse.name.charAt(0).toUpperCase() }}
+                      </div>
+
+                      <span class="warehouse-name">
+                        {{ warehouse.name }}
+                      </span>
+                    </div>
+                  </td>
+
+                  <td>
+                    <span class="warehouse-address">
+                      {{ warehouse.address || 'Address not provided' }}
+                    </span>
+                  </td>
+
+                  <td>
+                    @if (warehouse.isActive) {
+                      <span class="status-badge status-active">
+                        <span class="status-indicator"></span>
+                        Active
+                      </span>
+                    } @else {
+                      <span class="status-badge status-inactive">
+                        <span class="status-indicator"></span>
+                        Inactive
+                      </span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table-footer">
+          <span>
+            Showing <strong>{{ warehouses.length }}</strong>
+            {{ warehouses.length === 1 ? 'warehouse' : 'warehouses' }}
+          </span>
+          <span class="footer-status">
+            <span></span>
+            Data loaded
+          </span>
+        </div>
+
+      }
     }
-  }
-</div>
+
+  </div>
+</section>
+
+@if (showCreateModal) {
+  <div class="warehouse-modal-backdrop" (click)="closeCreateModal()">
+
+    <section
+      class="warehouse-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="warehouse-modal-title"
+      (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <div>
+          <span class="section-eyebrow">WAREHOUSE MANAGEMENT</span>
+          <h2 id="warehouse-modal-title">Add Warehouse</h2>
+          <p>Enter the details to register a new warehouse.</p>
+        </div>
+
+        <button
+          type="button"
+          class="modal-close-button"
+          aria-label="Close"
+          [disabled]="saving"
+          (click)="closeCreateModal()">
+          ×
+        </button>
+      </div>
+
+      <form
+        [formGroup]="warehouseForm"
+        (ngSubmit)="createWarehouse()"
+        novalidate>
+
+        <div class="modal-form-content">
+
+          <div class="form-field">
+            <label for="warehouse-code">Warehouse Code *</label>
+            <input
+              id="warehouse-code"
+              type="text"
+              formControlName="code"
+              placeholder="e.g. WH-001"
+              maxlength="50"
+              autocomplete="off">
+
+            @if (
+              warehouseForm.controls.code.touched &&
+              warehouseForm.controls.code.hasError('required')
+            ) {
+              <span class="field-error">Warehouse code is required.</span>
+            }
+
+            @if (
+              warehouseForm.controls.code.touched &&
+              warehouseForm.controls.code.hasError('maxlength')
+            ) {
+              <span class="field-error">Maximum 50 characters allowed.</span>
+            }
+          </div>
+
+          <div class="form-field">
+            <label for="warehouse-name">Warehouse Name *</label>
+            <input
+              id="warehouse-name"
+              type="text"
+              formControlName="name"
+              placeholder="e.g. Auckland Main Warehouse"
+              maxlength="200"
+              autocomplete="off">
+
+            @if (
+              warehouseForm.controls.name.touched &&
+              warehouseForm.controls.name.hasError('required')
+            ) {
+              <span class="field-error">Warehouse name is required.</span>
+            }
+
+            @if (
+              warehouseForm.controls.name.touched &&
+              warehouseForm.controls.name.hasError('maxlength')
+            ) {
+              <span class="field-error">Maximum 200 characters allowed.</span>
+            }
+          </div>
+
+          <div class="form-field">
+            <label for="warehouse-address">Address</label>
+            <textarea
+              id="warehouse-address"
+              formControlName="address"
+              rows="3"
+              placeholder="Enter warehouse address (optional)"></textarea>
+          </div>
+
+          @if (formErrorMessage) {
+            <div class="form-error-message" role="alert">
+              {{ formErrorMessage }}
+            </div>
+          }
+
+        </div>
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="cancel-button"
+            [disabled]="saving"
+            (click)="closeCreateModal()">
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            class="save-warehouse-button"
+            [disabled]="saving">
+            @if (saving) {
+              Saving...
+            } @else {
+              Create Warehouse
+            }
+          </button>
+        </div>
+
+      </form>
+    </section>
+  </div>
+}

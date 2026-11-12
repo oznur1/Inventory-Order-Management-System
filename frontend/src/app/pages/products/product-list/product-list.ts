@@ -22,6 +22,7 @@ import { ProductService } from '../../../services/product.service';
   styleUrl: './product-list.scss',
 })
 export class ProductList implements OnInit {
+
   private productService = inject(ProductService);
   private cdr = inject(ChangeDetectorRef);
 
@@ -54,31 +55,32 @@ export class ProductList implements OnInit {
     this.errorMessage = '';
 
     this.productService.getAll().subscribe({
-      next: (data) => {
-        console.log('API ürün yanıtı:', data);
 
+      next: (data) => {
         this.products = data;
         this.loading = false;
 
-        console.log('Loading:', this.loading);
-        console.log('Ürün sayısı:', this.products.length);
-
         this.cdr.detectChanges();
       },
-      error: (error) => {
-        console.error('Ürün API hatası:', error);
 
-        this.errorMessage = 'Ürünler yüklenirken bir hata oluştu.';
+      error: (error) => {
+        console.error('Failed to load products:', error);
+
+        this.errorMessage =
+          'Something went wrong while loading products. Please try again.';
+
         this.loading = false;
 
         this.cdr.detectChanges();
-      },
+      }
+
     });
   }
 
   deleteProduct(id: number): void {
+
     const confirmed = confirm(
-      'Bu ürünü silmek istediğine emin misin?'
+      'Are you sure you want to delete this product? This action cannot be undone.'
     );
 
     if (!confirmed) {
@@ -86,14 +88,20 @@ export class ProductList implements OnInit {
     }
 
     this.productService.delete(id).subscribe({
+
       next: () => {
         this.loadProducts();
       },
+
       error: (error) => {
-        console.error('Ürün silinemedi:', error);
-        this.errorMessage = 'Ürün silinirken bir hata oluştu.';
+        console.error('Failed to delete product:', error);
+
+        this.errorMessage =
+          'Something went wrong while deleting the product.';
+
         this.cdr.detectChanges();
-      },
+      }
+
     });
   }
 }

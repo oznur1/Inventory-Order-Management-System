@@ -29,7 +29,7 @@ public class InventoryController : ControllerBase
         {
             return BadRequest(new
             {
-                message = "Depo ve ürün ID değerleri pozitif olmalıdır."
+                message = "Warehouse and product IDs must be positive."
             });
         }
 
@@ -68,7 +68,7 @@ public class InventoryController : ControllerBase
         {
             return NotFound(new
             {
-                message = "Stok kaydı bulunamadı."
+                message = "Inventory record not found."
             });
         }
 
@@ -91,11 +91,17 @@ public class InventoryController : ControllerBase
         }
         catch (KeyNotFoundException ex)
         {
-            return NotFound(new { message = ex.Message });
+            return NotFound(new
+            {
+                message = ex.Message
+            });
         }
         catch (InvalidOperationException ex)
         {
-            return Conflict(new { message = ex.Message });
+            return Conflict(new
+            {
+                message = ex.Message
+            });
         }
     }
 
@@ -105,33 +111,53 @@ public class InventoryController : ControllerBase
         int id,
         [FromBody] UpdateInventoryDto dto)
     {
-        var inventory = await _inventoryService.UpdateAsync(id, dto);
-
-        if (inventory is null)
+        try
         {
-            return NotFound(new
+            var inventory = await _inventoryService.UpdateAsync(id, dto);
+
+            if (inventory is null)
             {
-                message = "Stok kaydı bulunamadı."
+                return NotFound(new
+                {
+                    message = "Inventory record not found."
+                });
+            }
+
+            return Ok(inventory);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new
+            {
+                message = ex.Message
             });
         }
-
-        return Ok(inventory);
     }
 
     // DELETE: api/inventory/1
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        bool deleted = await _inventoryService.DeleteAsync(id);
-
-        if (!deleted)
+        try
         {
-            return NotFound(new
+            bool deleted = await _inventoryService.DeleteAsync(id);
+
+            if (!deleted)
             {
-                message = "Stok kaydı bulunamadı."
+                return NotFound(new
+                {
+                    message = "Inventory record not found."
+                });
+            }
+
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new
+            {
+                message = ex.Message
             });
         }
-
-        return NoContent();
     }
 }

@@ -21,6 +21,7 @@ public class OrdersController : ControllerBase
     public async Task<ActionResult<List<OrderResponseDto>>> GetAll()
     {
         var orders = await _orderService.GetAllAsync();
+
         return Ok(orders);
     }
 
@@ -42,31 +43,32 @@ public class OrdersController : ControllerBase
     }
 
     // POST: api/Orders/1/ship
-[HttpPost("{id:int}/ship")]
-public async Task<IActionResult> Ship(int id)
-{
-    try
+    [HttpPost("{id:int}/ship")]
+    public async Task<IActionResult> Ship(int id)
     {
-        var result = await _orderService.ShipAsync(id);
-
-        if (result is null)
+        try
         {
-            return NotFound(new
+            var result = await _orderService.ShipAsync(id);
+
+            if (result is null)
             {
-                message = "Order not found."
+                return NotFound(new
+                {
+                    message = "Order not found."
+                });
+            }
+
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new
+            {
+                message = ex.Message
             });
         }
+    }
 
-        return Ok(result);
-    }
-    catch (InvalidOperationException ex)
-    {
-        return BadRequest(new
-        {
-            message = ex.Message
-        });
-    }
-}
     // POST: api/Orders
     [HttpPost]
     public async Task<IActionResult> Create(
@@ -83,7 +85,7 @@ public async Task<IActionResult> Ship(int id)
         }
         catch (InvalidOperationException ex)
         {
-            return BadRequest(new
+            return Conflict(new
             {
                 message = ex.Message
             });

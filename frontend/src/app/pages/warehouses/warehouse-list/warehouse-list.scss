@@ -1,127 +1,258 @@
 
-.warehouse-list {
-  width: 100%;
-}
+/* Heading actions */
 
-.section-heading {
+.heading-actions {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 16px;
-  margin-bottom: 22px;
+  gap: 12px;
 }
 
-.section-eyebrow {
-  color: #2563eb;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 1.3px;
-}
-
-.section-heading h2 {
-  margin: 6px 0;
-  color: #172033;
-  font-size: 21px;
-}
-
-.section-description {
-  margin: 0;
-  color: #94a3b8;
-  font-size: 12px;
-}
-
-.warehouse-count {
-  padding: 7px 12px;
-  border: 1px solid #dbeafe;
-  border-radius: 20px;
-  background: #eff6ff;
-  color: #2563eb;
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.warehouse-table-container {
-  width: 100%;
-  overflow-x: auto;
-}
-
-.warehouse-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  white-space: nowrap;
-}
-
-.warehouse-table th {
-  padding: 15px;
-  background: #f5f8fc;
-  color: #64748b;
-  font-size: 11px;
-  letter-spacing: 0.5px;
-  text-align: left;
-}
-
-.warehouse-table td {
-  padding: 16px 15px;
-  border-bottom: 1px solid #edf0f5;
-  color: #475569;
-  font-size: 13px;
-}
-
-.warehouse-table tbody tr:hover {
-  background: #f8faff;
-}
-
-.warehouse-code {
-  padding: 5px 9px;
-  border-radius: 5px;
-  background: #f1f5f9;
-  color: #475569;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.warehouse-name {
-  color: #172033;
-  font-weight: 600;
-}
-
-.warehouse-address {
-  color: #64748b !important;
-}
-
-.status-active,
-.status-inactive {
+.add-warehouse-button,
+.empty-add-button,
+.save-warehouse-button {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  border-radius: 8px;
+  background: #176b4d;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.add-warehouse-button {
+  min-height: 39px;
+  padding: 0 15px;
+}
+
+.add-warehouse-button:hover,
+.empty-add-button:hover,
+.save-warehouse-button:hover:not(:disabled) {
+  background: #10563d;
+}
+
+.add-icon {
+  font-size: 19px;
+  line-height: 1;
+}
+
+.empty-add-button {
+  margin-top: 17px;
+  padding: 10px 15px;
+}
+
+/* Warehouse modal */
+
+.warehouse-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 25, 22, 0.55);
+  backdrop-filter: blur(3px);
+}
+
+.warehouse-modal {
+  width: 100%;
+  max-width: 480px;
+  overflow: hidden;
+  border: 1px solid #e7ebf2;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 23px 25px 19px;
+  border-bottom: 1px solid #edf0f5;
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: #172033;
+  font-size: 20px;
+  font-weight: 750;
+}
+
+.modal-header p {
+  margin: 7px 0 0;
+  color: #778399;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.modal-close-button {
+  display: grid;
+  width: 31px;
+  height: 31px;
+  flex: 0 0 31px;
+  place-items: center;
+  border: 1px solid #e7ebf2;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #667085;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.modal-close-button:hover {
+  background: #f7f9fc;
+}
+
+.modal-form-content {
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+  padding: 22px 25px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
   gap: 7px;
-  padding: 5px 10px;
-  border-radius: 20px;
+}
+
+.form-field label {
+  color: #344054;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.form-field input,
+.form-field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 12px;
+  border: 1px solid #dce2eb;
+  border-radius: 7px;
+  outline: none;
+  background: #ffffff;
+  color: #263348;
+  font-family: inherit;
+  font-size: 12px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-field input:focus,
+.form-field textarea:focus {
+  border-color: #39866a;
+  box-shadow: 0 0 0 3px rgba(23, 107, 77, 0.1);
+}
+
+.form-field input::placeholder,
+.form-field textarea::placeholder {
+  color: #a0a9b8;
+}
+
+.form-field textarea {
+  resize: vertical;
+  min-height: 75px;
+}
+
+.field-error {
+  color: #c33e3e;
+  font-size: 10px;
+}
+
+.form-error-message {
+  padding: 10px 12px;
+  border: 1px solid #f1caca;
+  border-radius: 7px;
+  background: #fff5f5;
+  color: #ad3838;
   font-size: 11px;
-  font-weight: 600;
+  line-height: 1.5;
 }
 
-.status-active {
-  background: #ecfdf3;
-  color: #15803d;
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 25px;
+  border-top: 1px solid #edf0f5;
+  background: #fbfcfd;
 }
 
-.status-inactive {
-  background: #f1f5f9;
-  color: #64748b;
+.cancel-button,
+.save-warehouse-button {
+  min-height: 37px;
+  padding: 0 15px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 650;
+  cursor: pointer;
 }
 
-.status-indicator {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: currentColor;
+.cancel-button {
+  border: 1px solid #dce2eb;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #526075;
 }
 
-.warehouse-message,
-.warehouse-empty {
-  padding: 28px;
-  color: #94a3b8;
-  text-align: center;
+.cancel-button:hover:not(:disabled) {
+  background: #f4f6f9;
+}
+
+.save-warehouse-button:disabled,
+.cancel-button:disabled,
+.modal-close-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Responsive modal */
+
+@media (max-width: 650px) {
+  .heading-actions {
+    flex-wrap: wrap;
+  }
+
+  .add-warehouse-button {
+    min-height: 36px;
+    padding: 0 11px;
+  }
+
+  .modal-header,
+  .modal-form-content {
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+
+  .modal-actions {
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+}
+
+@media (max-width: 420px) {
+  .heading-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .warehouse-modal-backdrop {
+    padding: 12px;
+  }
+
+  .modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .cancel-button,
+  .save-warehouse-button {
+    width: 100%;
+  }
 }

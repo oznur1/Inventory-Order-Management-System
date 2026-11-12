@@ -1,4 +1,3 @@
-
 export interface Inventory {
   id: number;
   productId: number;
@@ -10,6 +9,13 @@ export interface Inventory {
   availableQuantity: number;
   reorderLevel: number;
   updatedAt: string;
+}
+
+export interface CreateInventory {
+  productId: number;
+  warehouseId: number;
+  quantityOnHand: number;
+  reorderLevel: number;
 }
 
 export interface LowStockAlert {

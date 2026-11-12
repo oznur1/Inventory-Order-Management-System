@@ -6,7 +6,8 @@ import { Observable } from 'rxjs';
 import {
   StockMovement,
   StockMovementFilters,
-  StockMovementReport
+  StockMovementReport,
+  CreateStockMovement
 } from '../models/stock-movement.model';
 
 @Injectable({
@@ -48,6 +49,13 @@ export class StockMovementService {
   getReport(): Observable<StockMovementReport> {
     return this.http.get<StockMovementReport>(
       `${this.apiUrl}/report`
+    );
+  }
+
+  create(movement: CreateStockMovement): Observable<StockMovement> {
+    return this.http.post<StockMovement>(
+      this.apiUrl,
+      movement
     );
   }
 }

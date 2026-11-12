@@ -1,48 +1,68 @@
 
-<div class="low-stock-list">
+<section class="low-stock-page">
 
-  <div class="alert-heading">
+  <div class="page-header">
     <div>
-      <span class="alert-eyebrow">INVENTORY MONITORING</span>
-      <h2>Low Stock Alerts</h2>
-      <p>Yeniden sipariş seviyesi altındaki ürünleri takip edin.</p>
+      <span class="eyebrow">INVENTORY MANAGEMENT</span>
+      <h2>Stok uyarıları</h2>
+      <p class="page-description">
+        Monitor inventory levels and identify products that need replenishment.
+      </p>
     </div>
 
-    <div class="alert-count">
-      <span class="alert-count-icon">!</span>
-      {{ alerts.length }} uyarı
+    <div class="header-actions">
+      <div class="alert-count">
+        <span class="count-number">{{ alerts.length }}</span>
+        <span class="count-label">Active alerts</span>
+      </div>
+
+      <button
+        type="button"
+        class="add-inventory-button"
+        (click)="openInventoryModal()">
+        + Add Stock
+      </button>
+
+      <button
+        type="button"
+        class="refresh-button"
+        (click)="loadAlerts()"
+        [disabled]="loading">
+        Refresh
+      </button>
     </div>
   </div>
 
-  @if (loading) {
-    <div class="alert-message">
-      Stok bilgileri yükleniyor...
+  @if (successMessage) {
+    <div class="success-message">
+      {{ successMessage }}
     </div>
-  } @else if (errorMessage) {
-    <p class="error">{{ errorMessage }}</p>
-  } @else {
+  }
 
-    @if (alerts.length > 0) {
-      <div class="alert-summary">
-        <div class="alert-summary-icon">!</div>
-        <div>
-          <strong>{{ alerts.length }} düşük stok kaydı</strong>
-          <span>Bu ürünlerin stok seviyelerini kontrol etmeniz önerilir.</span>
-        </div>
-      </div>
-    }
+  @if (errorMessage) {
+    <div class="error-message">
+      {{ errorMessage }}
+    </div>
+  }
 
-    <div class="low-stock-table-container">
-      <table class="low-stock-table">
+  @if (loading) {
+    <div class="state-container">
+      <p>Loading low stock alerts...</p>
+    </div>
+  }
+
+  @if (!loading && alerts.length > 0) {
+    <div class="table-container">
+      <table>
         <thead>
           <tr>
-            <th>ÜRÜN</th>
-            <th>DEPO</th>
-            <th>MEVCUT STOK</th>
-            <th>AYRILMIŞ</th>
-            <th>KULLANILABİLİR</th>
-            <th>SİPARİŞ SEVİYESİ</th>
-            <th>STOK AÇIĞI</th>
+            <th>PRODUCT</th>
+            <th>WAREHOUSE</th>
+            <th>ON HAND</th>
+            <th>RESERVED</th>
+            <th>AVAILABLE</th>
+            <th>REORDER LEVEL</th>
+            <th>STOCK DEFICIT</th>
           </tr>
         </thead>
 
@@ -50,41 +70,26 @@
           @for (alert of alerts; track alert.inventoryId) {
             <tr>
               <td>
-                <span class="alert-product-name">
-                  {{ alert.productName }}
+                <strong>{{ alert.productName }}</strong>
+                <span class="secondary-text">
+                  Product #{{ alert.productId }}
                 </span>
               </td>
 
               <td>{{ alert.warehouseName }}</td>
 
-              <td>
-                <span class="stock-value">
-                  {{ alert.quantityOnHand }}
-                </span>
-              </td>
+              <td>{{ alert.quantityOnHand }}</td>
 
               <td>{{ alert.reservedQuantity }}</td>
 
-              <td>
-                <span class="available-value">
-                  {{ alert.availableQuantity }}
-                </span>
-              </td>
+              <td>{{ alert.availableQuantity }}</td>
 
               <td>{{ alert.reorderLevel }}</td>
 
               <td>
                 <span class="deficit-badge">
-                  -{{ alert.stockDeficit }}
+                  {{ alert.stockDeficit }}
                 </span>
-              </td>
-            </tr>
-          } @empty {
-            <tr>
-              <td colspan="7" class="empty-alert">
-                <span class="empty-alert-icon">✓</span>
-                <strong>Tüm stok seviyeleri normal.</strong>
-                <span>Şu anda düşük stok uyarısı bulunmuyor.</span>
               </td>
             </tr>
           }
@@ -93,5 +98,165 @@
     </div>
   }
 
-</div>
+  @if (!loading && !errorMessage && alerts.length === 0) {
+    <div class="empty-state">
+      <div class="empty-icon">✓</div>
+      <h3>All stock levels are healthy</h3>
+      <p>
+        No low stock alerts were found. Add an inventory record to start
+        monitoring stock levels.
+      </p>
 
+      <button
+        type="button"
+        class="add-inventory-button"
+        (click)="openInventoryModal()">
+        Add First Stock Record
+      </button>
+    </div>
+  }
+
+</section>
+
+@if (showInventoryModal) {
+  <div class="modal-overlay" (click)="closeInventoryModal()">
+
+    <div
+      class="inventory-modal"
+      (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <div>
+          <span class="eyebrow">INVENTORY MANAGEMENT</span>
+          <h3>Add Stock Record</h3>
+          <p>Create an initial inventory record for a product and warehouse.</p>
+        </div>
+
+        <button
+          type="button"
+          class="close-button"
+          (click)="closeInventoryModal()"
+          [disabled]="saving">
+          ×
+        </button>
+      </div>
+
+      <form
+        [formGroup]="inventoryForm"
+        (ngSubmit)="createInventory()">
+
+        <div class="form-group">
+          <label for="productId">Product</label>
+
+          <select id="productId" formControlName="productId">
+            <option [ngValue]="0">Select a product</option>
+
+            @for (product of products; track product.id) {
+              <option [ngValue]="product.id">
+                {{ product.sku }} - {{ product.name }}
+              </option>
+            }
+          </select>
+
+          @if (
+            inventoryForm.controls.productId.touched &&
+            inventoryForm.controls.productId.invalid
+          ) {
+            <span class="field-error">Please select a product.</span>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="warehouseId">Warehouse</label>
+
+          <select id="warehouseId" formControlName="warehouseId">
+            <option [ngValue]="0">Select a warehouse</option>
+
+            @for (warehouse of warehouses; track warehouse.id) {
+              <option [ngValue]="warehouse.id">
+                {{ warehouse.code }} - {{ warehouse.name }}
+              </option>
+            }
+          </select>
+
+          @if (
+            inventoryForm.controls.warehouseId.touched &&
+            inventoryForm.controls.warehouseId.invalid
+          ) {
+            <span class="field-error">Please select a warehouse.</span>
+          }
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="quantityOnHand">Initial Quantity</label>
+
+            <input
+              id="quantityOnHand"
+              type="number"
+              min="0"
+              formControlName="quantityOnHand"
+              placeholder="e.g. 5" />
+
+            @if (
+              inventoryForm.controls.quantityOnHand.touched &&
+              inventoryForm.controls.quantityOnHand.invalid
+            ) {
+              <span class="field-error">
+                Quantity must be zero or greater.
+              </span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="reorderLevel">Reorder Level</label>
+
+            <input
+              id="reorderLevel"
+              type="number"
+              min="0"
+              formControlName="reorderLevel"
+              placeholder="e.g. 10" />
+
+            @if (
+              inventoryForm.controls.reorderLevel.touched &&
+              inventoryForm.controls.reorderLevel.invalid
+            ) {
+              <span class="field-error">
+                Reorder level must be zero or greater.
+              </span>
+            }
+          </div>
+        </div>
+
+        @if (loadingOptions) {
+          <p class="form-info">Loading products and warehouses...</p>
+        }
+
+        @if (formErrorMessage) {
+          <div class="error-message">
+            {{ formErrorMessage }}
+          </div>
+        }
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="cancel-button"
+            (click)="closeInventoryModal()"
+            [disabled]="saving">
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            class="save-button"
+            [disabled]="saving || loadingOptions">
+            {{ saving ? 'Saving...' : 'Create Stock Record' }}
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+}

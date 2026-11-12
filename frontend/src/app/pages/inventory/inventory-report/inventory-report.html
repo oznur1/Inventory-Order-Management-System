@@ -1,147 +1,251 @@
 
-<div class="inventory-report">
+<section class="dashboard">
 
-  <!-- PAGE HEADER -->
-  <div class="report-heading">
-    <div>
-      <span class="report-eyebrow">INVENTORY ANALYTICS</span>
-      <h2>Inventory Report</h2>
-      <p>Monitor inventory levels, stock availability and warehouse distribution.</p>
-    </div>
-
-    <button
-      type="button"
-      class="refresh-button"
-      (click)="loadReport()"
-      [disabled]="loading">
-      <span class="refresh-icon">↻</span>
-      {{ loading ? 'Refreshing...' : 'Refresh Report' }}
-    </button>
-  </div>
-
-  <!-- LOADING -->
   @if (loading && !report) {
-    <div class="report-message">
+    <div class="dashboard-state">
       <span class="loading-spinner"></span>
-      <p>Loading inventory report...</p>
+      <span>Dashboard yükleniyor...</span>
     </div>
-  }
-
-  <!-- ERROR -->
-  @if (errorMessage) {
-    <div class="report-error">
-      <strong>Unable to load report</strong>
-      <span>{{ errorMessage }}</span>
-      <button type="button" (click)="loadReport()">Try Again</button>
+  } @else if (errorMessage && !report) {
+    <div class="dashboard-error">
+      <strong>Veriler yüklenemedi</strong>
+      <p>{{ errorMessage }}</p>
+      <button type="button" (click)="loadReport()">Tekrar dene</button>
     </div>
-  }
+  } @else if (report) {
 
-  <!-- REPORT CONTENT -->
-  @if (report) {
+    <!-- Statistics -->
+    <section class="stats-grid">
 
-    <!-- KPI CARDS -->
-    <div class="report-kpi-grid">
-
-      <div class="kpi-card">
-        <div class="kpi-card-top">
-          <span class="kpi-label">TOTAL PRODUCTS</span>
-          <span class="kpi-icon products-icon">◇</span>
+      <article class="stat-card">
+        <div class="stat-top">
+          <span class="stat-label">Kayıtlı ürün</span>
+          <span class="stat-icon green">▦</span>
         </div>
-        <strong class="kpi-value">
-          {{ report.totalProducts | number }}
+        <strong class="stat-value">
+          {{ report.totalProducts }}
         </strong>
-        <span class="kpi-description">Unique products in inventory</span>
-      </div>
+        <span class="stat-description">Sistemdeki toplam ürün</span>
+      </article>
 
-      <div class="kpi-card">
-        <div class="kpi-card-top">
-          <span class="kpi-label">TOTAL WAREHOUSES</span>
-          <span class="kpi-icon warehouses-icon">▤</span>
+      <article class="stat-card">
+        <div class="stat-top">
+          <span class="stat-label">Kullanılabilir stok</span>
+          <span class="stat-icon blue">▤</span>
         </div>
-        <strong class="kpi-value">
-          {{ report.totalWarehouses | number }}
-        </strong>
-        <span class="kpi-description">Warehouses with inventory</span>
-      </div>
-
-      <div class="kpi-card">
-        <div class="kpi-card-top">
-          <span class="kpi-label">AVAILABLE STOCK</span>
-          <span class="kpi-icon available-icon">▦</span>
-        </div>
-        <strong class="kpi-value">
+        <strong class="stat-value">
           {{ report.totalAvailableQuantity | number }}
         </strong>
-        <span class="kpi-description">Units available for operations</span>
-      </div>
+        <span class="stat-description">Rezerve edilmemiş ürün adedi</span>
+      </article>
 
-      <div class="kpi-card warning-card">
-        <div class="kpi-card-top">
-          <span class="kpi-label">LOW STOCK ALERTS</span>
-          <span class="kpi-icon warning-icon">!</span>
+      <article class="stat-card">
+        <div class="stat-top">
+          <span class="stat-label">Minimum stok uyarısı</span>
+          <span class="stat-icon amber">⚠</span>
         </div>
-        <strong class="kpi-value">
-          {{ report.lowStockCount | number }}
+        <strong class="stat-value">
+          {{ report.lowStockCount }}
         </strong>
-        <span class="kpi-description">Inventory records below reorder level</span>
-      </div>
+        <span class="stat-description">Minimum seviyenin altındaki kayıtlar</span>
+      </article>
 
-    </div>
-
-    <!-- STOCK OVERVIEW -->
-    <section class="report-panel">
-
-      <div class="panel-heading">
-        <div>
-          <span class="panel-eyebrow">STOCK OVERVIEW</span>
-          <h3>Inventory Summary</h3>
-          <p>Current stock quantities across all inventory records.</p>
+      <article class="stat-card">
+        <div class="stat-top">
+          <span class="stat-label">Bugünkü hareketler</span>
+          <span class="stat-icon purple">⇄</span>
         </div>
-
-        <span class="panel-status">
-          <span></span>
-          Live report
-        </span>
-      </div>
-
-      <div class="stock-summary-grid">
-
-        <div class="stock-summary-item">
-          <span class="summary-label">Total Inventory Records</span>
-          <strong>{{ report.totalInventoryRecords | number }}</strong>
-        </div>
-
-        <div class="stock-summary-item">
-          <span class="summary-label">Physical Stock</span>
-          <strong>{{ report.totalQuantityOnHand | number }}</strong>
-        </div>
-
-        <div class="stock-summary-item">
-          <span class="summary-label">Reserved Quantity</span>
-          <strong>{{ report.totalReservedQuantity | number }}</strong>
-        </div>
-
-        <div class="stock-summary-item">
-          <span class="summary-label">Available Quantity</span>
-          <strong class="available-total">
-            {{ report.totalAvailableQuantity | number }}
-          </strong>
-        </div>
-
-      </div>
+        <strong class="stat-value">
+          {{ todayMovementCount }}
+        </strong>
+        <span class="stat-description">Bugün kaydedilen işlemler</span>
+      </article>
 
     </section>
 
-    <!-- REPORT FOOTER -->
-    <div class="report-footer">
+    <!-- Inventory Overview -->
+    <section class="overview-grid">
+
+      <article class="dashboard-panel inventory-panel">
+        <div class="panel-header">
+          <div>
+            <h2>Stok özeti</h2>
+            <p>İşletmenizin mevcut stok dağılımı</p>
+          </div>
+          <span class="panel-icon">▥</span>
+        </div>
+
+        <div class="inventory-summary">
+
+          <div class="inventory-summary-row">
+            <div>
+              <span class="summary-name">Fiziksel stok</span>
+              <strong>
+                {{ report.totalQuantityOnHand | number }}
+              </strong>
+            </div>
+            <span class="summary-unit">adet</span>
+          </div>
+
+          <div class="inventory-summary-row">
+            <div>
+              <span class="summary-name">Kullanılabilir stok</span>
+              <strong>
+                {{ report.totalAvailableQuantity | number }}
+              </strong>
+            </div>
+            <span class="summary-unit">adet</span>
+          </div>
+
+          <div class="inventory-summary-row">
+            <div>
+              <span class="summary-name">Rezerve stok</span>
+              <strong>
+                {{ report.totalReservedQuantity | number }}
+              </strong>
+            </div>
+            <span class="summary-unit">adet</span>
+          </div>
+
+          <div class="inventory-summary-row">
+            <div>
+              <span class="summary-name">Depo sayısı</span>
+              <strong>
+                {{ report.totalWarehouses }}
+              </strong>
+            </div>
+            <span class="summary-unit">depo</span>
+          </div>
+
+        </div>
+      </article>
+
+      <article class="dashboard-panel movement-summary-panel">
+        <div class="panel-header">
+          <div>
+            <h2>Stok hareketleri</h2>
+            <p>Yüklenen hareket kayıtlarının özeti</p>
+          </div>
+          <span class="panel-icon">⇄</span>
+        </div>
+
+        <div class="movement-summary">
+
+          <div class="movement-summary-item">
+            <span class="movement-summary-label">
+              <span class="legend-dot inbound-dot"></span>
+              Giriş işlemleri
+            </span>
+            <strong>{{ inboundCount }}</strong>
+          </div>
+
+          <div class="movement-summary-item">
+            <span class="movement-summary-label">
+              <span class="legend-dot outbound-dot"></span>
+              Çıkış işlemleri
+            </span>
+            <strong>{{ outboundCount }}</strong>
+          </div>
+
+          <div class="movement-summary-item total">
+            <span class="movement-summary-label">Toplam hareket</span>
+            <strong>{{ movements.length }}</strong>
+          </div>
+
+        </div>
+
+        <div class="movement-note">
+          Bu değerler API'den alınan hareket kayıtlarına dayanır.
+        </div>
+      </article>
+
+    </section>
+
+    <!-- Recent Movements -->
+    <section class="dashboard-panel recent-panel">
+
+      <div class="panel-header">
+        <div>
+          <h2>Son hareketler</h2>
+          <p>En son kaydedilen stok giriş ve çıkış işlemleri</p>
+        </div>
+
+        <span class="record-count">
+          {{ recentMovements.length }} kayıt
+        </span>
+      </div>
+
+      @if (movements.length === 0) {
+        <div class="dashboard-empty">
+          <span class="empty-symbol">⇄</span>
+          <strong>Henüz stok hareketi yok</strong>
+          <p>İlk stok giriş veya çıkış işleminizi yaptığınızda burada görünecek.</p>
+        </div>
+      } @else {
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>ÜRÜN</th>
+                <th>DEPO</th>
+                <th>HAREKET</th>
+                <th>ADET</th>
+                <th>TARİH</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              @for (movement of recentMovements; track movement.id) {
+                <tr>
+                  <td class="product-name">
+                    {{ movement.productName }}
+                  </td>
+
+                  <td>{{ movement.warehouseName }}</td>
+
+                  <td>
+                    @if (movement.movementType === 'Inbound') {
+                      <span class="movement-badge inbound">
+                        Giriş
+                      </span>
+                    } @else {
+                      <span class="movement-badge outbound">
+                        Çıkış
+                      </span>
+                    }
+                  </td>
+
+                  <td class="quantity">
+                    {{ movement.quantity | number }}
+                  </td>
+
+                  <td>
+                    {{ movement.createdAt | date:'dd.MM.yyyy HH:mm' }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+
+    </section>
+
+    <div class="dashboard-footer">
       <span>
-        Report generated:
-        {{ report.generatedAt | date:'dd MMM yyyy, HH:mm' }}
+        Son güncelleme:
+        {{ report.generatedAt | date:'dd.MM.yyyy HH:mm' }}
       </span>
 
-      <span>VENÜS ERP · Inventory Analytics</span>
+      <button
+        type="button"
+        class="refresh-button"
+        (click)="loadReport()"
+        [disabled]="loading">
+        {{ loading ? 'Yükleniyor...' : '↻ Yenile' }}
+      </button>
     </div>
 
   }
 
-</div>
+</section>

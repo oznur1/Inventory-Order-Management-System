@@ -16,44 +16,43 @@ public class InventoryService
     }
 
     // Tüm stok kayıtlarını listele
-   
-public async Task<List<InventoryResponseDto>> GetAllAsync(
-    int? warehouseId = null,
-    int? productId = null)
-{
-    var query = _context.InventoryBalances
-        .AsNoTracking()
-        .AsQueryable();
-
-    // Depoya göre filtreleme
-    if (warehouseId.HasValue)
+    public async Task<List<InventoryResponseDto>> GetAllAsync(
+        int? warehouseId = null,
+        int? productId = null)
     {
-        query = query.Where(i => i.WarehouseId == warehouseId.Value);
-    }
+        var query = _context.InventoryBalances
+            .AsNoTracking()
+            .AsQueryable();
 
-    // Ürüne göre filtreleme
-    if (productId.HasValue)
-    {
-        query = query.Where(i => i.ProductId == productId.Value);
-    }
-
-    return await query
-        .Select(i => new InventoryResponseDto
+        if (warehouseId.HasValue)
         {
-            Id = i.Id,
-            ProductId = i.ProductId,
-            ProductName = i.Product.Name,
-            WarehouseId = i.WarehouseId,
-            WarehouseName = i.Warehouse.Name,
-            QuantityOnHand = i.QuantityOnHand,
-            ReservedQuantity = i.ReservedQuantity,
-            AvailableQuantity = i.QuantityOnHand - i.ReservedQuantity,
-            ReorderLevel = i.ReorderLevel,
-            UpdatedAt = i.UpdatedAt
-        })
-        .ToListAsync();
-}
+            query = query.Where(
+                i => i.WarehouseId == warehouseId.Value);
+        }
 
+        if (productId.HasValue)
+        {
+            query = query.Where(
+                i => i.ProductId == productId.Value);
+        }
+
+        return await query
+            .Select(i => new InventoryResponseDto
+            {
+                Id = i.Id,
+                ProductId = i.ProductId,
+                ProductName = i.Product.Name,
+                WarehouseId = i.WarehouseId,
+                WarehouseName = i.Warehouse.Name,
+                QuantityOnHand = i.QuantityOnHand,
+                ReservedQuantity = i.ReservedQuantity,
+                AvailableQuantity =
+                    i.QuantityOnHand - i.ReservedQuantity,
+                ReorderLevel = i.ReorderLevel,
+                UpdatedAt = i.UpdatedAt
+            })
+            .ToListAsync();
+    }
 
     // Düşük stok seviyesindeki ürünleri listele
     public async Task<List<LowStockAlertDto>> GetLowStockAsync()
@@ -70,9 +69,11 @@ public async Task<List<InventoryResponseDto>> GetAllAsync(
                 WarehouseName = i.Warehouse.Name,
                 QuantityOnHand = i.QuantityOnHand,
                 ReservedQuantity = i.ReservedQuantity,
-                AvailableQuantity = i.QuantityOnHand - i.ReservedQuantity,
+                AvailableQuantity =
+                    i.QuantityOnHand - i.ReservedQuantity,
                 ReorderLevel = i.ReorderLevel,
-                StockDeficit = i.ReorderLevel - i.QuantityOnHand,
+                StockDeficit =
+                    i.ReorderLevel - i.QuantityOnHand,
                 UpdatedAt = i.UpdatedAt
             })
             .OrderBy(i => i.QuantityOnHand)
@@ -94,7 +95,8 @@ public async Task<List<InventoryResponseDto>> GetAllAsync(
                 WarehouseName = i.Warehouse.Name,
                 QuantityOnHand = i.QuantityOnHand,
                 ReservedQuantity = i.ReservedQuantity,
-                AvailableQuantity = i.QuantityOnHand - i.ReservedQuantity,
+                AvailableQuantity =
+                    i.QuantityOnHand - i.ReservedQuantity,
                 ReorderLevel = i.ReorderLevel,
                 UpdatedAt = i.UpdatedAt
             })
@@ -144,6 +146,7 @@ public async Task<List<InventoryResponseDto>> GetAllAsync(
         };
 
         _context.InventoryBalances.Add(inventory);
+
         await _context.SaveChangesAsync();
 
         return await GetByIdAsync(inventory.Id)
@@ -162,6 +165,13 @@ public async Task<List<InventoryResponseDto>> GetAllAsync(
         if (inventory is null)
         {
             return null;
+        }
+
+        if (dto.QuantityOnHand < inventory.ReservedQuantity)
+        {
+            throw new InvalidOperationException(
+                $"Stok miktarı, rezerve edilen miktardan düşük olamaz. " +
+                $"Rezerve edilen miktar: {inventory.ReservedQuantity}");
         }
 
         inventory.QuantityOnHand = dto.QuantityOnHand;
@@ -184,50 +194,86 @@ public async Task<List<InventoryResponseDto>> GetAllAsync(
             return false;
         }
 
+        bool hasStockMovements = await _context.StockMovements
+            .AnyAsync(m =>
+                m.ProductId == inventory.ProductId &&
+                m.WarehouseId == inventory.WarehouseId);
+
+        bool hasReservations = await _context.StockReservations
+            .AnyAsync(r =>
+                r.ProductId == inventory.ProductId &&
+                r.WarehouseId == inventory.WarehouseId);
+
+        if (hasStockMovements || hasReservations)
+        {
+            throw new InvalidOperationException(
+                "Inventory cannot be deleted because related stock movements or reservations exist.");
+        }
+
         _context.InventoryBalances.Remove(inventory);
+
         await _context.SaveChangesAsync();
 
         return true;
     }
 
+    // Genel stok raporunu oluştur
+    public async Task<InventoryReportDto> GetReportAsync()
+    {
+        // Ürün sayısı stok kayıtlarından bağımsız hesaplanır.
+        var totalProducts = await _context.Products
+            .AsNoTracking()
+            .CountAsync();
 
-// Genel stok raporunu oluştur
+        // Depo sayısı depo tablosundan hesaplanır.
+        var totalWarehouses = await _context.Warehouses
+            .AsNoTracking()
+            .CountAsync();
 
-public async Task<InventoryReportDto> GetReportAsync()
-{
-    var report = await _context.InventoryBalances
-        .AsNoTracking()
-        .GroupBy(i => 1)
-        .Select(g => new InventoryReportDto
+        // Stok miktarları InventoryBalances üzerinden hesaplanır.
+        var inventoryData = await _context.InventoryBalances
+            .AsNoTracking()
+            .GroupBy(i => 1)
+            .Select(g => new
+            {
+                TotalInventoryRecords = g.Count(),
+
+                TotalQuantityOnHand = g.Sum(
+                    i => i.QuantityOnHand),
+
+                TotalReservedQuantity = g.Sum(
+                    i => i.ReservedQuantity),
+
+                TotalAvailableQuantity = g.Sum(
+                    i => i.QuantityOnHand - i.ReservedQuantity),
+
+                LowStockCount = g.Count(
+                    i => i.QuantityOnHand <= i.ReorderLevel)
+            })
+            .FirstOrDefaultAsync();
+
+        return new InventoryReportDto
         {
-            TotalInventoryRecords = g.Count(),
+            TotalInventoryRecords =
+                inventoryData?.TotalInventoryRecords ?? 0,
 
-            TotalProducts = g
-                .Select(i => i.ProductId)
-                .Distinct()
-                .Count(),
+            TotalProducts = totalProducts,
 
-            TotalWarehouses = g
-                .Select(i => i.WarehouseId)
-                .Distinct()
-                .Count(),
+            TotalWarehouses = totalWarehouses,
 
-            TotalQuantityOnHand = g.Sum(i => i.QuantityOnHand),
+            TotalQuantityOnHand =
+                inventoryData?.TotalQuantityOnHand ?? 0,
 
-            TotalReservedQuantity = g.Sum(i => i.ReservedQuantity),
+            TotalReservedQuantity =
+                inventoryData?.TotalReservedQuantity ?? 0,
 
-            TotalAvailableQuantity = g.Sum(
-                i => i.QuantityOnHand - i.ReservedQuantity),
+            TotalAvailableQuantity =
+                inventoryData?.TotalAvailableQuantity ?? 0,
 
-            LowStockCount = g.Count(
-                i => i.QuantityOnHand <= i.ReorderLevel)
-        })
-        .FirstOrDefaultAsync();
+            LowStockCount =
+                inventoryData?.LowStockCount ?? 0,
 
-    report ??= new InventoryReportDto();
-
-    report.GeneratedAt = DateTime.UtcNow;
-
-    return report;
-}
+            GeneratedAt = DateTime.UtcNow
+        };
+    }
 }

@@ -344,4 +344,36 @@ public class OrderServiceTests
         // Assert: No additional stock movement is created.
         Assert.Equal(1, await context.StockMovements.CountAsync());
     }
+
+
+[Fact]
+public async Task ShipAsync_WithNonExistingOrder_ReturnsNull()
+{
+    // Arrange
+    await using var connection =
+        new SqliteConnection("Data Source=:memory:");
+
+    await connection.OpenAsync();
+
+    var options = new DbContextOptionsBuilder<AppDbContext>()
+        .UseSqlite(connection)
+        .Options;
+
+    await using var context = new AppDbContext(options);
+
+    await InitializeDatabaseAsync(context);
+
+    var service = new OrderService(context);
+
+    // Act
+    var result = await service.ShipAsync(999);
+
+    // Assert
+    Assert.Null(result);
+
+    Assert.Empty(await context.Orders.ToListAsync());
+
+    Assert.Empty(await context.StockMovements.ToListAsync());
+}
+
 }

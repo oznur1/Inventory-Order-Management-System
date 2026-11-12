@@ -1,48 +1,95 @@
 
-<div class="stock-movements">
+<section class="stock-movements">
 
-  <div class="page-header">
-    <div>
+  <header class="page-header">
+    <div class="page-heading">
       <span class="eyebrow">INVENTORY MANAGEMENT</span>
       <h2>Stock Movements</h2>
-      <p>Monitor and track all inventory inbound and outbound transactions.</p>
+      <p>
+        Track inventory transactions and monitor incoming and outgoing stock.
+      </p>
     </div>
 
-    <button
-      type="button"
-      class="refresh-btn"
-      (click)="loadMovements()"
-      [disabled]="loading">
-      {{ loading ? 'Refreshing...' : '↻ Refresh' }}
-    </button>
-  </div>
+    <div class="header-actions">
+      <button
+        type="button"
+        class="add-movement-btn"
+        (click)="openMovementModal()">
+        + Add Movement
+      </button>
 
-  <div class="summary-row">
-    <div class="summary-card">
-      <span>Total Movements</span>
-      <strong>{{ movements.length }}</strong>
+      <button
+        type="button"
+        class="refresh-btn"
+        (click)="loadMovements()"
+        [disabled]="loading">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path
+            d="M20 7V12H15M4 17V12H9"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M5.5 9A7 7 0 0 1 18 6.5L20 12M4 12L6 17.5A7 7 0 0 0 18.5 15"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+
+        <span>{{ loading ? 'Refreshing...' : 'Refresh Data' }}</span>
+      </button>
     </div>
+  </header>
 
-    <div class="summary-card inbound-card">
-      <span>Inbound Movements</span>
-      <strong>
-        {{ movements.filter(m => m.movementType === 'Inbound').length }}
-      </strong>
+  @if (successMessage) {
+    <div class="success-message">
+      {{ successMessage }}
     </div>
+  }
 
-    <div class="summary-card outbound-card">
-      <span>Outbound Movements</span>
-      <strong>
-        {{ movements.filter(m => m.movementType === 'Outbound').length }}
-      </strong>
-    </div>
-  </div>
+  <section class="summary-row">
 
-  <div class="filter-panel">
-    <div class="filter-heading">
-      <div>
-        <h3>Filter Movements</h3>
-        <p>Search transactions using the available filters.</p>
+    <article class="summary-card total-card">
+      <div class="summary-top">
+        <span class="summary-label">Total Movements</span>
+      </div>
+
+      <strong class="summary-value">{{ movements.length }}</strong>
+      <span class="summary-caption">Recorded transactions</span>
+    </article>
+
+    <article class="summary-card inbound-card">
+      <div class="summary-top">
+        <span class="summary-label">Inbound Movements</span>
+      </div>
+
+      <strong class="summary-value">{{ inboundCount }}</strong>
+      <span class="summary-caption">Incoming stock transactions</span>
+    </article>
+
+    <article class="summary-card outbound-card">
+      <div class="summary-top">
+        <span class="summary-label">Outbound Movements</span>
+      </div>
+
+      <strong class="summary-value">{{ outboundCount }}</strong>
+      <span class="summary-caption">Outgoing stock transactions</span>
+    </article>
+
+  </section>
+
+  <section class="filter-panel">
+
+    <div class="panel-heading">
+      <div class="panel-heading-main">
+        <div>
+          <h3>Filter Transactions</h3>
+          <p>Refine the movement history using the filters below.</p>
+        </div>
       </div>
     </div>
 
@@ -55,7 +102,8 @@
           type="number"
           min="1"
           [(ngModel)]="productId"
-          placeholder="Enter product ID">
+          placeholder="Enter product ID"
+        />
       </div>
 
       <div class="filter-field">
@@ -65,15 +113,14 @@
           type="number"
           min="1"
           [(ngModel)]="warehouseId"
-          placeholder="Enter warehouse ID">
+          placeholder="Enter warehouse ID"
+        />
       </div>
 
       <div class="filter-field">
         <label for="movementType">Movement Type</label>
-        <select
-          id="movementType"
-          [(ngModel)]="movementType">
-          <option value="">All Movements</option>
+        <select id="movementType" [(ngModel)]="movementType">
+          <option value="">All Types</option>
           <option value="Inbound">Inbound</option>
           <option value="Outbound">Outbound</option>
         </select>
@@ -81,18 +128,12 @@
 
       <div class="filter-field">
         <label for="from">From Date</label>
-        <input
-          id="from"
-          type="date"
-          [(ngModel)]="from">
+        <input id="from" type="date" [(ngModel)]="from" />
       </div>
 
       <div class="filter-field">
         <label for="to">To Date</label>
-        <input
-          id="to"
-          type="date"
-          [(ngModel)]="to">
+        <input id="to" type="date" [(ngModel)]="to" />
       </div>
 
     </div>
@@ -101,114 +142,315 @@
       <button
         type="button"
         class="apply-btn"
-        (click)="applyFilters()">
+        (click)="applyFilters()"
+        [disabled]="loading">
         Apply Filters
       </button>
 
       <button
         type="button"
         class="reset-btn"
-        (click)="resetFilters()">
-        Reset
+        (click)="resetFilters()"
+        [disabled]="loading">
+        Reset Filters
       </button>
     </div>
-  </div>
 
-  <div class="table-panel">
+  </section>
+
+  <section class="table-panel">
 
     <div class="table-header">
       <div>
         <h3>Movement History</h3>
-        <p>Inventory transaction records</p>
+        <p>Detailed inventory transaction records</p>
       </div>
 
       <span class="record-count">
-        {{ movements.length }} records
+        {{ movements.length }}
+        {{ movements.length === 1 ? 'Record' : 'Records' }}
       </span>
     </div>
 
     @if (loading) {
       <div class="state-message">
-        Loading stock movements...
+        <span class="loading-spinner"></span>
+        <span>Loading stock movements...</span>
       </div>
-    }
+    } @else if (errorMessage) {
+      <div class="error-message" role="alert">
+        <div class="error-icon">!</div>
 
-    @if (errorMessage) {
-      <div class="error-message">
-        {{ errorMessage }}
+        <div>
+          <strong>Unable to load stock movements</strong>
+          <p>{{ errorMessage }}</p>
 
-        <button type="button" (click)="loadMovements()">
-          Try Again
+          <button type="button" (click)="loadMovements()">
+            Try Again
+          </button>
+        </div>
+      </div>
+    } @else if (movements.length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M5 4H19V20H5V4Z"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M8 9H16M8 13H16M8 17H13"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+            />
+          </svg>
+        </div>
+
+        <h3>No Stock Movements Found</h3>
+        <p>
+          No transactions match your current filters.
+          Create your first stock movement to get started.
+        </p>
+
+        <button
+          type="button"
+          class="add-movement-btn"
+          (click)="openMovementModal()">
+          Add First Movement
         </button>
       </div>
-    }
-
-    @if (!loading && !errorMessage && movements.length === 0) {
-      <div class="state-message">
-        No stock movements found.
-      </div>
-    }
-
-    @if (!loading && !errorMessage && movements.length > 0) {
+    } @else {
       <div class="table-wrapper">
         <table>
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Product</th>
-              <th>Warehouse</th>
-              <th>Movement Type</th>
-              <th>Quantity</th>
-              <th>Reference</th>
-              <th>Date</th>
-              <th>Notes</th>
+              <th>TRANSACTION ID</th>
+              <th>PRODUCT</th>
+              <th>WAREHOUSE</th>
+              <th>MOVEMENT TYPE</th>
+              <th>QUANTITY</th>
+              <th>REFERENCE</th>
+              <th>DATE</th>
+              <th>NOTES</th>
             </tr>
           </thead>
 
           <tbody>
             @for (movement of movements; track movement.id) {
               <tr>
-                <td>#{{ movement.id }}</td>
-
-                <td class="product-cell">
-                  {{ movement.productName }}
+                <td>
+                  <span class="transaction-id">#{{ movement.id }}</span>
                 </td>
 
                 <td>
-                  {{ movement.warehouseName }}
+                  <span class="product-cell">{{ movement.productName }}</span>
                 </td>
 
                 <td>
-                  <span
-                    class="movement-badge"
-                    [class.inbound]="movement.movementType === 'Inbound'"
-                    [class.outbound]="movement.movementType === 'Outbound'">
-                    {{ movement.movementType }}
+                  <span class="warehouse-cell">{{ movement.warehouseName }}</span>
+                </td>
+
+                <td>
+                  @if (movement.movementType === 'Inbound') {
+                    <span class="movement-badge inbound">
+                      <span class="badge-indicator"></span>
+                      Inbound
+                    </span>
+                  } @else {
+                    <span class="movement-badge outbound">
+                      <span class="badge-indicator"></span>
+                      Outbound
+                    </span>
+                  }
+                </td>
+
+                <td>
+                  <span class="quantity-cell">{{ movement.quantity }}</span>
+                </td>
+
+                <td>
+                  <span class="reference-cell">
+                    {{ movement.referenceNumber || '—' }}
                   </span>
                 </td>
 
-                <td class="quantity-cell">
-                  {{ movement.quantity }}
+                <td>
+                  <span class="date-cell">
+                    {{ movement.createdAt | date:'dd MMM yyyy, HH:mm' }}
+                  </span>
                 </td>
 
                 <td>
-                  {{ movement.referenceNumber || '—' }}
-                </td>
-
-                <td>
-                  {{ movement.createdAt | date:'dd MMM yyyy, HH:mm' }}
-                </td>
-
-                <td class="notes-cell">
-                  {{ movement.notes || '—' }}
+                  <span class="notes-cell" [title]="movement.notes || ''">
+                    {{ movement.notes || '—' }}
+                  </span>
                 </td>
               </tr>
             }
           </tbody>
         </table>
       </div>
+
+      <div class="table-footer">
+        <span>
+          Showing <strong>{{ movements.length }}</strong>
+          {{ movements.length === 1 ? 'transaction' : 'transactions' }}
+        </span>
+
+        <span class="footer-status">
+          <span></span>
+          Data loaded
+        </span>
+      </div>
     }
 
-  </div>
+  </section>
 
-</div>
+</section>
+
+@if (showMovementModal) {
+  <div class="modal-overlay" (click)="closeMovementModal()">
+
+    <div
+      class="movement-modal"
+      (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <div>
+          <span class="eyebrow">INVENTORY MANAGEMENT</span>
+          <h3>Create Stock Movement</h3>
+          <p>Record incoming or outgoing stock transactions.</p>
+        </div>
+
+        <button
+          type="button"
+          class="close-button"
+          (click)="closeMovementModal()"
+          [disabled]="saving">
+          ×
+        </button>
+      </div>
+
+      <form (ngSubmit)="createMovement()">
+
+        <div class="form-group">
+          <label for="newProductId">Product</label>
+
+          <select
+            id="newProductId"
+            name="newProductId"
+            [(ngModel)]="newMovement.productId"
+            required>
+            <option [ngValue]="0">Select a product</option>
+
+            @for (product of products; track product.id) {
+              <option [ngValue]="product.id">
+                {{ product.sku }} - {{ product.name }}
+              </option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="newWarehouseId">Warehouse</label>
+
+          <select
+            id="newWarehouseId"
+            name="newWarehouseId"
+            [(ngModel)]="newMovement.warehouseId"
+            required>
+            <option [ngValue]="0">Select a warehouse</option>
+
+            @for (warehouse of warehouses; track warehouse.id) {
+              <option [ngValue]="warehouse.id">
+                {{ warehouse.code }} - {{ warehouse.name }}
+              </option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="newMovementType">Movement Type</label>
+
+          <select
+            id="newMovementType"
+            name="newMovementType"
+            [(ngModel)]="newMovement.movementType"
+            required>
+            <option value="Inbound">Inbound - Stock In</option>
+            <option value="Outbound">Outbound - Stock Out</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="quantity">Quantity</label>
+
+          <input
+            id="quantity"
+            name="quantity"
+            type="number"
+            min="1"
+            step="1"
+            [(ngModel)]="newMovement.quantity"
+            required
+            placeholder="Enter quantity" />
+        </div>
+
+        <div class="form-group">
+          <label for="referenceNumber">Reference Number</label>
+
+          <input
+            id="referenceNumber"
+            name="referenceNumber"
+            type="text"
+            maxlength="50"
+            [(ngModel)]="newMovement.referenceNumber"
+            placeholder="e.g. PO-2026-001" />
+        </div>
+
+        <div class="form-group">
+          <label for="notes">Notes</label>
+
+          <textarea
+            id="notes"
+            name="notes"
+            rows="3"
+            maxlength="500"
+            [(ngModel)]="newMovement.notes"
+            placeholder="Enter transaction notes"></textarea>
+        </div>
+
+        @if (loadingOptions) {
+          <p class="form-info">Loading products and warehouses...</p>
+        }
+
+        @if (formErrorMessage) {
+          <div class="error-message" role="alert">
+            {{ formErrorMessage }}
+          </div>
+        }
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="cancel-button"
+            (click)="closeMovementModal()"
+            [disabled]="saving">
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            class="save-button"
+            [disabled]="saving || loadingOptions">
+            {{ saving ? 'Saving...' : 'Save Movement' }}
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+}

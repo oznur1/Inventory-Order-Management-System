@@ -1,3 +1,4 @@
+
 using backend.DTOs;
 using backend.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -18,72 +19,72 @@ public class StockMovementController : ControllerBase
     }
 
     // GET: api/StockMovement
-   
-[HttpGet]
-public async Task<IActionResult> GetAll(
-    [FromQuery] int? productId,
-    [FromQuery] int? warehouseId,
-    [FromQuery] string? movementType,
-    [FromQuery] DateTime? from,
-    [FromQuery] DateTime? to)
-{
-    if ((productId.HasValue && productId.Value <= 0) ||
-        (warehouseId.HasValue && warehouseId.Value <= 0))
+    [HttpGet]
+    public async Task<IActionResult> GetAll(
+        [FromQuery] int? productId,
+        [FromQuery] int? warehouseId,
+        [FromQuery] string? movementType,
+        [FromQuery] DateTime? from,
+        [FromQuery] DateTime? to)
     {
-        return BadRequest(new
-        {
-            message = "Ürün ve depo ID değerleri pozitif olmalıdır."
-        });
-    }
-
-    if (!string.IsNullOrWhiteSpace(movementType))
-    {
-        if (!string.Equals(movementType, "Inbound",
-                StringComparison.OrdinalIgnoreCase) &&
-            !string.Equals(movementType, "Outbound",
-                StringComparison.OrdinalIgnoreCase))
+        if ((productId.HasValue && productId.Value <= 0) ||
+            (warehouseId.HasValue && warehouseId.Value <= 0))
         {
             return BadRequest(new
             {
-                message = "Hareket türü Inbound veya Outbound olmalıdır."
+                message = "Product and warehouse IDs must be positive."
             });
         }
 
-        movementType = movementType.Trim().Equals(
-            "Inbound", StringComparison.OrdinalIgnoreCase)
-            ? "Inbound"
-            : "Outbound";
-    }
-
-    if (from.HasValue && to.HasValue &&
-        from.Value.Date > to.Value.Date)
-    {
-        return BadRequest(new
+        if (!string.IsNullOrWhiteSpace(movementType))
         {
-            message = "Başlangıç tarihi bitiş tarihinden sonra olamaz."
-        });
+            if (!string.Equals(
+                    movementType, "Inbound",
+                    StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(
+                    movementType, "Outbound",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest(new
+                {
+                    message = "Movement type must be Inbound or Outbound."
+                });
+            }
+
+            movementType = movementType.Trim().Equals(
+                "Inbound",
+                StringComparison.OrdinalIgnoreCase)
+                ? "Inbound"
+                : "Outbound";
+        }
+
+        if (from.HasValue && to.HasValue &&
+            from.Value.Date > to.Value.Date)
+        {
+            return BadRequest(new
+            {
+                message = "Start date cannot be later than end date."
+            });
+        }
+
+        var movements = await _stockMovementService.GetAllAsync(
+            productId,
+            warehouseId,
+            movementType,
+            from,
+            to);
+
+        return Ok(movements);
     }
 
-    var movements = await _stockMovementService.GetAllAsync(
-        productId,
-        warehouseId,
-        movementType,
-        from,
-        to);
+    // GET: api/StockMovement/report
+    [HttpGet("report")]
+    public async Task<IActionResult> GetReport()
+    {
+        var report = await _stockMovementService.GetReportAsync();
 
-    return Ok(movements);
-}
-   
-
-// GET: api/StockMovement/report
-[HttpGet("report")]
-public async Task<IActionResult> GetReport()
-{
-    var report = await _stockMovementService.GetReportAsync();
-
-    return Ok(report);
-}
-
+        return Ok(report);
+    }
 
     // POST: api/StockMovement
     [HttpPost]
@@ -92,8 +93,7 @@ public async Task<IActionResult> GetReport()
     {
         try
         {
-            var result =
-                await _stockMovementService.CreateAsync(dto);
+            var result = await _stockMovementService.CreateAsync(dto);
 
             return CreatedAtAction(
                 nameof(GetAll),
@@ -101,18 +101,37 @@ public async Task<IActionResult> GetReport()
         }
         catch (KeyNotFoundException ex)
         {
-            return NotFound(new { message = ex.Message });
+            return NotFound(new
+            {
+                message = ex.Message
+            });
         }
         catch (DbUpdateConcurrencyException)
         {
             return Conflict(new
             {
-                message = "Stok başka bir işlem tarafından güncellendi. Lütfen tekrar deneyin."
+                message = "Stock was updated by another operation. Please try again."
             });
         }
         catch (InvalidOperationException ex)
         {
-            return BadRequest(new { message = ex.Message });
+            var isInvalidMovementType =
+                ex.Message.Contains(
+                    "MovementType",
+                    StringComparison.OrdinalIgnoreCase);
+
+            if (isInvalidMovementType)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+
+            return Conflict(new
+            {
+                message = ex.Message
+            });
         }
     }
 }

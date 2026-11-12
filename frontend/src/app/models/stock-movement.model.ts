@@ -12,6 +12,15 @@ export interface StockMovement {
   createdAt: string;
 }
 
+export interface CreateStockMovement {
+  productId: number;
+  warehouseId: number;
+  movementType: 'Inbound' | 'Outbound';
+  quantity: number;
+  referenceNumber: string | null;
+  notes: string | null;
+}
+
 export interface StockMovementFilters {
   productId?: number;
   warehouseId?: number;
